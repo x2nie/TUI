@@ -62,7 +62,7 @@ implementation
 function GetScreenBufPos(x,y: integer ): Pointer;
 begin
   result := VideoBuf;
-  inc(result, ScreenWidth * y + (x* SizeOf(Word)))
+  inc(result, (ScreenWidth * y + x) * SizeOf(TVideoCell) );
 end;
 
 constructor TTUIControl.Create(AOwner: TComponent);
@@ -70,7 +70,7 @@ begin
   inherited;
   FHeight := 1;
   FWidth := 10;
-  FColor := $5678;//debug
+  FColor := $7c7f;//debug
 end;
 
 procedure TTUIControl.Invalidate;
@@ -79,8 +79,11 @@ begin
 end;
 
 procedure TTUIControl.Paint;
+var
+  i : integer;
 begin
-  MoveCStr(GetScreenBufPos(FLeft,FTop)^, 'Test ~P~aint!', FColor);
+  for i := 0 to Height -1 do
+    MoveCStr(GetScreenBufPos(FLeft,FTop+i)^, 'Test ~P~aint!', FColor);
 end;
 
 function TTUIControl.ConstraintWidth(NewWidth: Integer): Integer;
