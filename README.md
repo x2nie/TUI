@@ -6,8 +6,8 @@ It provides easy and visual toolkit for devoloping console application
 while TV/FV using `object` basis.
 
 Author:
-  x2nie (2015 TComponent basis)
-  FPC team & contributor (1998 ~ 2000)
+  - x2nie (2015 TComponent basis)
+  - FPC team & contributor (1998 ~ 2000)
   
 
 To run (ver 0.1):
