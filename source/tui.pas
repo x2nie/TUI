@@ -122,7 +122,7 @@ end;
 
 procedure TTUIControl.Invalidate;
 begin
-  //if csLoading in ComponentState then exit;
+  if csLoading in ComponentState then exit;
 
   paint;
   if Designer <> nil then
@@ -239,6 +239,7 @@ begin
     FLeft := x;
     FPosIsDirty := FPosIsDirty or (FLeft <> FPrevLeft);
   end;
+  Invalidate;
 end;
 
 procedure TTUIControl.HandleResize(AWidth, AHeight: Integer);
@@ -262,6 +263,7 @@ begin
     FHeight := ConstraintHeight(AHeight);
     FSizeIsDirty := FSizeIsDirty or (FHeight <> FPrevHeight);
   end;
+  Invalidate;
 end;
 
 procedure TTUIControl.SetText(const AValue: string);
