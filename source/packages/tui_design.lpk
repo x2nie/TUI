@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <Package Version="4">
+    <PathDelim Value="\"/>
+    <Name Value="TUI_design"/>
+    <Type Value="DesignTime"/>
+    <Author Value="x2nie = Fathony Luthfillah"/>
+    <CompilerOptions>
+      <Version Value="11"/>
+      <PathDelim Value="\"/>
+      <SearchPaths>
+        <OtherUnitFiles Value="."/>
+        <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
+      </SearchPaths>
+    </CompilerOptions>
+    <Description Value="TUI Designer for Lazarus/FPC"/>
+    <License Value="GPL v2
+it uses/derives some part of Lazarus IDE/Designer, so it must be GPL"/>
+    <Version Minor="1"/>
+    <Files Count="3">
+      <Item1>
+        <Filename Value="tui_reg.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="TUI_Reg"/>
+      </Item1>
+      <Item2>
+        <Filename Value="tui_designmediator.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="TUI_DesignMediator"/>
+      </Item2>
+      <Item3>
+        <Filename Value="tui_designdescriptor.pas"/>
+        <HasRegisterProc Value="True"/>
+        <UnitName Value="tui_designdescriptor"/>
+      </Item3>
+    </Files>
+    <RequiredPkgs Count="3">
+      <Item1>
+        <PackageName Value="IDEIntf"/>
+      </Item1>
+      <Item2>
+        <PackageName Value="TUI_runtime"/>
+      </Item2>
+      <Item3>
+        <PackageName Value="FCL"/>
+      </Item3>
+    </RequiredPkgs>
+    <UsageOptions>
+      <UnitPath Value="$(PkgOutDir)"/>
+    </UsageOptions>
+    <PublishOptions>
+      <Version Value="2"/>
+    </PublishOptions>
+  </Package>
+</CONFIG>
