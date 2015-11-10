@@ -11,6 +11,8 @@ type
 
   ITUIDesigner = interface;
 
+  TVideoBuf = array[0..4095] of TVideoCell; //80 x 50, aligned
+
   { TTUIControl }
 
   TTUIControl = class(TComponent)
@@ -90,7 +92,9 @@ type
 
   ITUIDesigner = interface(IUnknown)
     procedure InvalidateRect(Sender: TObject);
+    procedure InvalidateBound(Sender: TObject);
   end;
+
 
 
 
@@ -239,7 +243,9 @@ begin
     FLeft := x;
     FPosIsDirty := FPosIsDirty or (FLeft <> FPrevLeft);
   end;
-  Invalidate;
+
+  if Designer <> nil then
+    Designer.InvalidateBound(self);
 end;
 
 procedure TTUIControl.HandleResize(AWidth, AHeight: Integer);
@@ -263,7 +269,9 @@ begin
     FHeight := ConstraintHeight(AHeight);
     FSizeIsDirty := FSizeIsDirty or (FHeight <> FPrevHeight);
   end;
-  Invalidate;
+
+  if Designer <> nil then
+    Designer.InvalidateBound(self);
 end;
 
 procedure TTUIControl.SetText(const AValue: string);

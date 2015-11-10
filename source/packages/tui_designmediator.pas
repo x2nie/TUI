@@ -17,7 +17,13 @@ type
   TTUIMediator = class(TDesignerMediator,ITUIDesigner)
   private
     FMyForm: TTUIForm;
+    FUpdateCount : integer;
+    //ITUIDesigner
     procedure InvalidateRect(Sender: TObject);
+    procedure InvalidateBound(Sender: TObject);
+    procedure BeginUpdate;
+    procedure EndUpdate;
+    function IsUpdating: boolean;
   public
     procedure MouseDown({%H-}Button: TMouseButton; {%H-}Shift: TShiftState; {%H-}p: TPoint; var {%H-}Handled: boolean); override;
 
@@ -100,6 +106,38 @@ begin
   //LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
 end;
 
+procedure TTUIMediator.InvalidateBound(Sender: TObject);
+var R : TRect;
+begin
+  if IsUpdating then exit;
+  if sender is TTUIForm then
+  begin
+    //position
+    GetBounds(TComponent(Sender), R);
+    LCLForm.SetBounds(R.Left, R.Top, LCLForm.Width, LCLForm.Height);
+    //size
+    OffsetRect(R, -R.Left, -R.Top);
+    //R.TopLeft := Point(0,0);
+    LCLForm.Width:= R.Right;
+    LCLForm.Height := R.Bottom;
+  end;
+end;
+
+procedure TTUIMediator.BeginUpdate;
+begin
+  inc(FUpdateCount);
+end;
+
+procedure TTUIMediator.EndUpdate;
+begin
+  dec(FUpdateCount);
+end;
+
+function TTUIMediator.IsUpdating: boolean;
+begin
+  result := FUpdateCount > 0;
+end;
+
 procedure TTUIMediator.MouseDown(Button: TMouseButton; Shift: TShiftState;
   p: TPoint; var Handled: boolean);
 var
@@ -174,12 +212,29 @@ begin
 end;
 
 procedure TTUIMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
-begin
+var w,h : integer;
+begin //here the form created by ide.new() -> width=50,height=50
+  BeginUpdate;
   if AComponent is TTUIControl then begin
+    w := (NewBounds.Right-NewBounds.Left);// div FontWidth;
+    h := (NewBounds.Bottom-NewBounds.Top);// div FontHeight;
+    if (w=50) and (h=50) and (AComponent is TTUIForm) then
+    with TTUIControl(AComponent) do begin
+      w := Width;
+      h := Height;
+    end
+    else
+    begin
+      w := w div FontWidth;
+      h := h div FontHeight;
+    end;
+
     TTUIControl(AComponent).SetBounds(NewBounds.Left div FontWidth, NewBounds.Top div FontHeight,
-      (NewBounds.Right-NewBounds.Left) div FontWidth, (NewBounds.Bottom-NewBounds.Top) div FontHeight);
-  end else
+      w, h);
+  end
+  else
     inherited SetBounds(AComponent,NewBounds);
+  EndUpdate;
 end;
 
 procedure TTUIMediator.Paint;
