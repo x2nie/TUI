@@ -112,13 +112,14 @@ type
     //FText:      string;
     //procedure   SetText(const AValue: string); virtual;
     //procedure   SetParentComponent(Value: TComponent); override;
-    //procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
+    procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     //procedure   SetName(const NewName: TComponentName); override;
     //property    Text : string read FText write SetText;
   public
     // requires by IDE Designer
     function    ChildrenCount: integer;
 
+    function    GetParentComponent: TComponent; override;
     function    HasParent: Boolean; override;
     function    GetParent: TGroup; //override;
 
@@ -378,6 +379,29 @@ end;
 function TView.ChildrenCount: integer;
 begin
   result := ComponentCount
+end;
+
+
+procedure TView.GetChildren(Proc: TGetChildProc; Root: TComponent);
+var
+  i: Integer;
+  OwnedComponent: TComponent;
+begin
+  {for i:=0 to ChildrenCount-1 do
+      if Children[i].Owner=Root then
+        Proc(Children[i]);
+}
+  if Root = Self then
+    for I := 0 to ComponentCount - 1 do
+    begin
+      OwnedComponent := Components[I];
+      {if not OwnedComponent.HasParent then} Proc(OwnedComponent);
+    end;
+end;
+
+function TView.GetParentComponent: TComponent;
+begin
+  Result:= Owner;
 end;
 
 function TView.HasParent: Boolean;

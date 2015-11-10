@@ -23,9 +23,9 @@ type
     property Text : string read FText write SetText;
   end;
 
-  { TLabel }
+  { TtuiLabel }
 
-  TLabel = class (TStaticText)
+  TtuiLabel = class (TStaticText)
   public
     constructor Create(AOwner: TComponent); override;
     procedure Paint; override;
@@ -33,14 +33,14 @@ type
 
 implementation
 
-{ TLabel }
+{ TtuiLabel }
 
-constructor TLabel.Create(AOwner: TComponent);
+constructor TtuiLabel.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 end;
 
-procedure TLabel.Paint;
+procedure TtuiLabel.Paint;
 begin
   MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, $7c7f);
 end;
