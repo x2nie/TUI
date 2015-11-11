@@ -166,9 +166,9 @@ type
 
   end;
 
-  { TWindow }
+  { TtuiWindow }
 
-  TWindow = class(TCustomWindow)
+  TtuiWindow = class(TCustomWindow)
   private
 
   public
@@ -212,19 +212,19 @@ begin
   Options := Options OR (ofSelectable + ofBuffered); { Set options }
 end;
 
-{ TWindow }
+{ TtuiWindow }
 
-constructor TWindow.Create(AOwner: TComponent);
+constructor TtuiWindow.Create(AOwner: TComponent);
 begin
   CreateNew(AOwner);
-  if (ClassType<>TWindow) and ([csDesignInstance, csDesigning]*ComponentState=[]) then
+  if (ClassType<>TtuiWindow) and ([csDesignInstance, csDesigning]*ComponentState=[]) then
   begin
-    if not InitInheritedComponent(Self, TWindow) then
+    if not InitInheritedComponent(Self, TtuiWindow) then
       //raise EResNotFound.CreateFmt(rsResourceNotFound, [ClassName]);
   end
 end;
 
-constructor TWindow.CreateNew(AOwner: TComponent);
+constructor TtuiWindow.CreateNew(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   FWidth := 60;

@@ -31,6 +31,10 @@ type
     procedure Paint; override;
   end;
 
+  TLabel = class(TtuiLabel)
+
+  end;
+
 implementation
 
 { TtuiLabel }

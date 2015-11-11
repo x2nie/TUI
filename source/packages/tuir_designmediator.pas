@@ -16,7 +16,7 @@ type
 
   TTuirMediator = class(TDesignerMediator,ITUIRDesigner)
   private
-    FMyForm: TWindow;
+    FMyForm: TtuiWindow;
     FUpdateCount : integer;
     //ITUIDesigner
     procedure InvalidateRect(Sender: TObject);
@@ -45,7 +45,7 @@ type
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     //procedure InvalidateRect(Sender: TObject; ARect: TRect; Erase: boolean);
-    property MyForm: TWindow read FMyForm;
+    property MyForm: TtuiWindow read FMyForm;
   public
     procedure GetObjInspNodeImageIndex(APersistent: TPersistent; var AIndex: integer); override;
   end;
@@ -111,7 +111,7 @@ procedure TTuirMediator.InvalidateBound(Sender: TObject);
 var R : TRect;
 begin
   if IsUpdating then exit;
-  if sender is TWindow then
+  if sender is TtuiWindow then
   begin
     //position
     GetBounds(TComponent(Sender), R);
@@ -166,13 +166,13 @@ var
 begin
   Result:=inherited CreateMediator(TheOwner,aForm);
   Mediator:=TTuirMediator(Result);
-  Mediator.FMyForm:=aForm as TWindow;
+  Mediator.FMyForm:=aForm as TtuiWindow;
   Mediator.FMyForm.Designer:=Mediator;
 end;
 
 class function TTuirMediator.FormClass: TComponentClass;
 begin
-  Result:=TWindow;
+  Result:=TtuiWindow;
 end;
 
 procedure TTuirMediator.GetBounds(AComponent: TComponent; out
@@ -219,7 +219,7 @@ begin //here the form created by ide.new() -> width=50,height=50
   if AComponent is TView then begin
     w := (NewBounds.Right-NewBounds.Left);// div FontWidth;
     h := (NewBounds.Bottom-NewBounds.Top);// div FontHeight;
-    if (w=50) and (h=50) and (AComponent is TWindow) then
+    if (w=50) and (h=50) and (AComponent is TtuiWindow) then
     with TView(AComponent) do begin
       w := Width;
       h := Height;

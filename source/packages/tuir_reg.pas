@@ -12,7 +12,7 @@ uses PropEdits,Tuir, Tuir_Widgets;
 
 procedure Register;
 begin
-  RegisterComponents('Standard',[TtuiLabel]);
+  RegisterComponents('Standard',[TtuiLabel, TLabel]);
 
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Caption', TStringMultilinePropertyEditor);
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Text', TStringMultilinePropertyEditor);
