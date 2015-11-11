@@ -326,7 +326,7 @@ procedure TTuirMediator.Paint;
             ApplyColor(BufP^.Att);
             LastAtt := BufP^.Att;
           end;
-          if BufP^.S > #32 then
+          //if BufP^.S > #30 then
             TextOut(x * FontWidth, y * FontHeight, BufP^.S);
 
           //inc(BufP, sizeof(TBuf));

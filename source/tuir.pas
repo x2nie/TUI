@@ -5,7 +5,7 @@ unit Tuir;
 interface
 
 uses
-  Classes, SysUtils,Drivers, Video;
+  Classes, SysUtils,Drivers, Video, FVCommon;
 
 {***************************************************************************}
 {                              PUBLIC CONSTANTS                             }
@@ -59,6 +59,48 @@ CONST
     gfGrowHiY = $08;                                   { Bottom side grow }
     gfGrowAll = $0F;                                   { Grow on all sides }
     gfGrowRel = $10;                                   { Grow relative }
+
+{---------------------------------------------------------------------------}
+{                          TWindow NUMBER CONSTANTS                         }
+{---------------------------------------------------------------------------}
+const
+   wnNoNumber = 0;                                    { Window has no num }
+   MaxViewWidth = 255;                                { Max view width }
+
+    
+{---------------------------------------------------------------------------}
+{                              PALETTE RECORD                               }
+{---------------------------------------------------------------------------}
+type
+   TPalette = String;                                 { Palette record }
+   PPalette = ^TPalette;                              { Pointer to palette }
+
+{---------------------------------------------------------------------------}
+{                            TDrawBuffer RECORD                             }
+{---------------------------------------------------------------------------}
+type
+   TDrawBuffer = Array [0..MaxViewWidth - 1] Of Word; { Draw buffer record }
+   PDrawBuffer = ^TDrawBuffer;                        { Ptr to draw buffer }
+
+
+   {---------------------------------------------------------------------------}
+   {                 INITIALIZED DOS/DPMI/WIN/NT/OS2 VARIABLES                 }
+   {---------------------------------------------------------------------------}
+   CONST
+      UseNativeClasses: Boolean = True;                  { Native class modes }
+      CommandSetChanged: Boolean = False;                { Command change flag }
+      ShowMarkers: Boolean = False;                      { Show marker state }
+      ErrorAttr: Byte = $CF;                             { Error colours }
+      PositionalEvents: Word = evMouse;                  { Positional defined }
+      FocusedEvents: Word = evKeyboard + evCommand;      { Focus defined }
+      MinWinSize: TPoint = (X: 16; Y: 6);                { Minimum window size }
+      ShadowSize: TPoint = (X: 2; Y: 1);                 { Shadow sizes }
+      ShadowAttr: Byte = $08;                            { Shadow attribute }
+
+   { Characters used for drawing selected and default items in  }
+   { monochrome color sets                                      }
+      SpecialChars: Array [0..5] Of Char = (#175, #174, #26, #27, ' ', ' ');
+{ COMPONENT SECTION }
 type
 
   ITUIRDesigner = interface;
@@ -71,7 +113,6 @@ type
 
   TView = class(TComponent)
   private
-    FColor: Word;
     FDesigner: ITUIRDesigner;
     //FParent: TView;
     function    ConstraintWidth(NewWidth: Integer): Integer;
@@ -79,11 +120,17 @@ type
     //function GetControlChildren(Index: integer): TView;
     function GetDesigner: ITUIRDesigner;
     procedure SetColor(AValue: Word);
+    function GetBoundsRect: TRect;
+    procedure SetBoundsRect(const Value: TRect);
     //procedure SetParent(AValue: TView);
+    procedure do_WriteView(x1,x2,y:Sw_Integer; var Buf);
+    procedure ResetCursor;
   protected
     GrowMode : Byte;                             { View grow mode }
     Options  : Word;                             { View options masks }
     EventMask: Word;                             { View event masks }
+    State    : Word;                             { View state masks }
+    FColor: Word;
     FTop: Integer;
     FLeft: Integer;
     FWidth: Integer;
@@ -99,6 +146,10 @@ type
     FSizeIsDirty: Boolean;
     FPosIsDirty: Boolean;
     FMouseCursorIsDirty: Boolean;
+    FPaintPending : Integer;
+    procedure BeginPainting;
+    procedure EndPainting;
+    function  Painting: Boolean;
     procedure   SetTop(const AValue: Integer);
     procedure   SetLeft(const AValue: Integer);
     procedure   SetHeight(const AValue: Integer);
@@ -115,6 +166,10 @@ type
     procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     //procedure   SetName(const NewName: TComponentName); override;
     //property    Text : string read FText write SetText;
+    procedure DrawUnderView;
+    procedure DrawUnderRect(var R: TRect);
+    procedure Draw; virtual;
+    procedure DrawCursor;
   public
     // requires by IDE Designer
     function    ChildrenCount: integer;
@@ -129,10 +184,19 @@ type
     property    Parent   : TGroup read GetParent;
     property    Designer : ITUIRDesigner read GetDesigner write FDesigner;
   public
+    ColourOfs: Sw_Integer;                          { View palette offset }
     constructor Create(AOwner: TComponent); override;
-    procedure Invalidate; virtual; //also tell the designer
-    procedure Paint; virtual;      //internal paint
+    procedure Invalidate(RefreshParent: Boolean = False); virtual; //also tell the designer
+    //procedure Paint; virtual;      //internal paint
     procedure SetBounds(ALeft,ATop, AWidth, AHeight: Integer); virtual;
+    procedure GetBounds(var R: TRect);
+    property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
+    procedure DrawView; virtual;	
+    function GetColor (Color: Word): Word;
+    function GetPalette: PPalette; Virtual;
+    procedure WriteLine (X, Y, W, H: Sw_Integer; Var Buf);
+    function ClientToScreen(X,Y: SW_Integer) : TPoint; overload;
+    function ClientToScreen(P: TPoint) : TPoint; overload;
 
   published
     property    Color: Word read FColor write SetColor;
@@ -149,8 +213,16 @@ type
   { TGroup }
 
   TGroup = class(TView)
+  private
+    function GetBuffer: PVideoBuf;
+    procedure ChildrenDrawView(Child: TComponent); 
+  protected
+    FBuffer: PVideoBuf;
+    procedure Draw; override;
   public
+    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer } 
     constructor Create(AOwner: TComponent); override;
+    procedure DrawSubViews(Sender: TView = nil);
 
   end;
 
@@ -194,6 +266,120 @@ begin
   inc(result, (ScreenWidth * y + x) * SizeOf(TVideoCell) );
 end;
 
+procedure DrawScreenBuf(Force: Boolean); //views.pas
+begin
+  if (GetLockScreenCount=0) then
+  begin
+    UpdateScreen(Force); //call os-dependent: currentVideo.UpdateScreen
+  end;
+end;
+
+function ScreenRect():TRect ;
+begin
+  result := Rect(0,0, Video.ScreenWidth-1, Video.ScreenHeight-1);
+end;
+
+
+{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+{                           TRect OBJECT METHODS                            }
+{+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++}
+procedure CheckEmpty (Var R: TRect);
+begin
+   With R Do begin
+     If (Left >= Right) OR (Top >= Bottom) Then begin       { Zero or reversed }
+       Left := 0;                                      { Clear Left }
+       Top := 0;                                      { Clear Top }
+       Right := 0;                                      { Clear Right }
+       Bottom := 0;                                      { Clear Bottom }
+     end;
+   end;
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Empty -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB                }
+{---------------------------------------------------------------------------}
+function RectEmpty(R:TRect): Boolean;
+begin
+   With R Do Result := (Left >= Right) OR (Top >= Bottom);             { Empty result }
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Equals -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB               }
+{---------------------------------------------------------------------------}
+function RectEquals (R,R2: TRect): Boolean;
+begin
+   With R2 Do 
+   Result := (Left = R.Left) AND (Top = R.Top) AND
+   (Right = R.Right) AND (Bottom = R.Bottom);                   { Equals result }
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Contains -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB             }
+{---------------------------------------------------------------------------}
+function RectContains (R: TRect; P: TPoint): Boolean;
+begin
+   With R Do 
+   Result := (P.X >= Left) AND (P.X < Right) AND
+     (P.Y >= Top) AND (P.Y < Bottom);                    { Contains result }
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Union -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB                }
+{---------------------------------------------------------------------------}
+function RectUnion (R1,R: TRect): TRect;
+begin
+  with R1 do begin
+    If (R.Left < Left) Then Left := R.Left;                { Take if smaller }
+    If (R.Top < Top) Then Top := R.Top;                { Take if smaller }
+    If (R.Right > Right) Then Right := R.Right;                { Take if larger }
+    If (R.Bottom > Bottom) Then Bottom := R.Bottom;                { Take if larger }
+  end;
+  Result := R1;
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Intersect -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB            }
+{---------------------------------------------------------------------------}
+function RectIntersect (R1,R: TRect):TRect;
+begin
+  with R1 do begin
+   If (R.Left > Left) Then Left := R.Left;                { Take if larger }
+   If (R.Top > Top) Then Top := R.Top;                { Take if larger }
+   If (R.Right < Right) Then Right := R.Right;                { Take if smaller }
+   If (R.Bottom < Bottom) Then Bottom := R.Bottom;                { Take if smaller }
+  end;
+  //CheckEmpty(R1);
+  Result := R1;
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Move -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB                 }
+{---------------------------------------------------------------------------}
+procedure RectMove (var R : TRect; ADX, ADY: Sw_Integer);
+begin
+  with R do begin
+   Inc(Left, ADX);                                     { Adjust Left }
+   Inc(Top, ADY);                                     { Adjust Top }
+   Inc(Right, ADX);                                     { Adjust Right }
+   Inc(Bottom, ADY);                                     { Adjust Bottom }
+  end;
+end;
+
+{--TRect--------------------------------------------------------------------}
+{  Grow -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB                 }
+{---------------------------------------------------------------------------}
+procedure RectGrow (var R:TRect; ADX, ADY: Sw_Integer);
+begin
+  with R do begin
+   Dec(Left, ADX);                                     { Adjust Left }
+   Dec(Top, ADY);                                     { Adjust Top }
+   Inc(Right, ADX);                                     { Adjust Right }
+   Inc(Bottom, ADY);                                     { Adjust Bottom }
+   CheckEmpty(R);                                  { Check if empty }
+  end;
+end;
+
+
 { TFrame }
 
 constructor TFrame.Create(AOwner: TComponent);
@@ -206,10 +392,41 @@ end;
 
 { TGroup }
 
+procedure TGroup.ChildrenDrawView(Child: TComponent);
+begin
+  TView(Child).DrawView;     
+end;
+
 constructor TGroup.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
   Options := Options OR (ofSelectable + ofBuffered); { Set options }
+end;
+
+procedure TGroup.Draw;
+begin
+  inherited Draw;
+  ///If Buffer=Nil then
+    DrawSubViews()
+  ///else
+    ///WriteBuf(0,0,Size.X,Size.Y,Buffer);
+end;
+
+procedure TGroup.DrawSubViews(Sender: TView);
+begin
+  GetChildren(@ChildrenDrawView,Self);
+		{# it is called by:
+			- TView.DrawUnderRec
+			- TGroup.Draw;
+			- TGroup.Redraw}
+end;
+
+
+function TGroup.GetBuffer: PVideoBuf;
+begin
+  Result := FBuffer;
+  if (Result = nil) and HasParent then
+    Result := Parent.Buffer;
 end;
 
 { TtuiWindow }
@@ -221,7 +438,8 @@ begin
   begin
     if not InitInheritedComponent(Self, TtuiWindow) then
       //raise EResNotFound.CreateFmt(rsResourceNotFound, [ClassName]);
-  end
+  end;
+  FColor := $c7fa;//debug
 end;
 
 constructor TtuiWindow.CreateNew(AOwner: TComponent);
@@ -244,29 +462,36 @@ begin
 end;
 
 
-procedure TView.Invalidate;
+procedure TView.Invalidate(RefreshParent: Boolean = False);
 begin
-  if csLoading in ComponentState then exit;
+  if {Painting or} (csLoading in ComponentState) then exit;
 
-  paint;
+  //paint;
+  if RefreshParent then
+    DrawUnderView
+  else
+    DrawView;
+    
   if Designer <> nil then
     Designer.InvalidateRect(self);
 end;
 
-procedure TView.Paint;
+(*procedure TView.Paint;
 {var
   i : integer;}
 begin
   {for i := 0 to Height -1 do
     MoveCStr(GetScreenBufPos(FLeft,FTop+i)^, 'Test ~P~aint!', FColor);}
   //MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, FColor);
-
-end;
+end;*)
 
 procedure TView.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
+  BeginPainting;
   HandleMove(ALeft, ATop);
   HandleResize(AWidth, AHeight);
+  EndPainting;
+  Invalidate(True);
 end;
 
 //
@@ -346,8 +571,10 @@ begin
     FPosIsDirty := FPosIsDirty or (FLeft <> FPrevLeft);
   end;
 
-  if Designer <> nil then
-    Designer.InvalidateBound(self);
+  if not Painting then
+    Invalidate(True);
+  //if Designer <> nil then
+    //Designer.InvalidateBound(self);
 end;
 
 procedure TView.HandleResize(AWidth, AHeight: Integer);
@@ -372,8 +599,10 @@ begin
     FSizeIsDirty := FSizeIsDirty or (FHeight <> FPrevHeight);
   end;
 
-  if Designer <> nil then
-    Designer.InvalidateBound(self);
+  if not Painting then
+    Invalidate(True);
+  //if Designer <> nil then
+    //Designer.InvalidateBound(self);
 end;
 
 function TView.ChildrenCount: integer;
@@ -381,7 +610,7 @@ begin
   result := ComponentCount
 end;
 
-
+                                                                          
 procedure TView.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
   i: Integer;
@@ -395,7 +624,7 @@ begin
     for I := 0 to ComponentCount - 1 do
     begin
       OwnedComponent := Components[I];
-      {if not OwnedComponent.HasParent then} Proc(OwnedComponent);
+      if OwnedComponent is TView then Proc(OwnedComponent);
     end;
 end;
 
@@ -418,6 +647,213 @@ end;
 
 
 
+
+procedure TView.DrawUnderView;
+  // it shall invalidate the screen because it is final call on Show/Hide
+  // I can't believe : why this method is called after 'DrawView' on DrawShow ?
+  // it seem 
+var
+  R: TRect;
+begin
+  GetBounds(R);
+  {if DoShadow then begin
+    inc(R.B.X,ShadowSize.X);
+    inc(R.B.Y,ShadowSize.Y);
+  end;}
+  DrawUnderRect(R{, LastView});
+end;
+
+procedure TView.DrawUnderRect(var R: TRect);
+  // it shall invalidate the screen because it is final call on Show/Hide
+begin
+  if HasParent then begin
+    //Owner^.Clip.Intersect(R);
+    //todo: is it need to suply self or R ?
+    Parent.DrawSubViews(self);//(NextView, LastView); //it seem as later calls DrawView also. So, DoShow call double DrawView. I guessing.
+    //Owner^.GetExtent(Owner^.Clip); //reset to bounds
+  end;
+end;
+
+function TView.GetBoundsRect: TRect;
+begin
+  Result.Left := FLeft;
+  Result.Top := FTop;
+  Result.Right := FLeft + FWidth;
+  Result.Bottom := FTop + FHeight;
+end;
+
+procedure TView.SetBoundsRect(const Value: TRect);
+begin
+  with Value do
+    SetBounds(Left, Top, Right - Left, Bottom - Top);
+end;
+
+procedure TView.GetBounds(var R: TRect);
+begin
+  R := GetBoundsRect;
+end;
+
+
+
+procedure TView.DrawView;
+  // Primarily, it is called by 'Show' and is NOT called by 'Hide'
+  //it's only here. no things such TGroup.DrawView 
+begin
+  //if Exposed then
+   begin
+     LockScreenUpdate; { don't update the screen yet }
+     Draw;
+     UnLockScreenUpdate;
+     DrawScreenBuf(false); //<------------------------------------ CALL VIDEO TO UPDATE ????
+     DrawCursor;
+   end;
+end;
+
+function TView.GetColor(Color: Word): Word;
+var Col: Byte; W: Word; P: PPalette; Q: TView;
+begin
+   W := 0;                                            { Clear colour Sw_Word }
+   If (Hi(Color) > 0) Then Begin                      { High colour req }
+     Col := Hi(Color) + ColourOfs;                    { Initial offset }
+     Q := Self;                                      { Pointer to self }
+     Repeat
+       P := Q.GetPalette;                            { Get our palette }
+       If (P <> Nil) Then Begin                       { Palette is valid }
+         If (Col <= Length(P^)) Then
+           Col := Ord(P^[Col]) Else                   { Return colour }
+           Col := ErrorAttr;                          { Error attribute }
+       End;
+       Q := Q.Parent;                                 { Move up to owner }
+     Until (Q = Nil);                                 { Until no owner }
+     W := Col SHL 8;                                  { Translate colour }
+   End;
+   If (Lo(Color) > 0) Then Begin
+     Col := Lo(Color) + ColourOfs;                    { Initial offset }
+     Q := Self;                                      { Pointer to self }
+     Repeat
+       P := Q.GetPalette;                            { Get our palette }
+       If (P <> Nil) Then Begin                       { Palette is valid }
+         If (Col <= Length(P^)) Then
+           Col := Ord(P^[Col]) Else                   { Return colour }
+           Col := ErrorAttr;                          { Error attribute }
+       End;
+       Q := Q.Parent;                                 { Move up to owner }
+     Until (Q = Nil);                                 { Until no owner }
+   End Else Col := ErrorAttr;                         { No colour found }
+   GetColor := W OR Col;                              { Return color }
+end;
+
+function TView.GetPalette: PPalette;
+begin
+  Result := nil;
+end;
+
+procedure TView.WriteLine(X, Y, W, H: Sw_Integer; var Buf);
+var
+  J:Sw_integer;
+  R : TRect;
+begin
+  if (h > 0) and (W > 0) then
+  begin
+    //for i:=0 to h-1 do
+      //do_writeView(x,x+w,y+i,buf);
+    R.TopLeft := ClientToScreen(X,Y);
+    R.BottomRight := ClientToScreen(X+W-1, Y+H-1);
+    R := RectIntersect(R, ScreenRect);
+    with R do begin
+      for J := Top to Bottom do
+        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Left,J)^, (Right-Left) * sizeof(TVideoCell));
+    end;
+    DrawScreenBuf(false);
+  end;
+end;
+
+
+
+procedure TView.Draw;
+var B : TDrawBuffer;
+begin
+	  //MoveChar(B, '&', GetColor(1), Width);
+    MoveChar(B, '&', Self.FColor, Width);
+	  WriteLine(0, 0, Width, Height, B);
+end;
+
+procedure TView.DrawCursor;
+begin
+  if State and sfFocused <> 0 then
+    ResetCursor;   
+end;
+
+procedure TView.do_WriteView(x1, x2, y: Sw_Integer; var Buf);
+begin
+  {if (y>=0) and (y<Size.Y) then
+   begin
+     if x1<0 then
+      x1:=0;
+     if x2>Size.X then
+      x2:=Size.X;
+     if x1<x2 then
+      begin
+        staticVar2.offset:=x1;
+        staticVar2.y:=y;
+        staticVar1:=@Buf;
+        do_writeViewRec2( x1, x2, @Self, 0 );
+      end;
+   end;}
+end;
+
+procedure TView.ResetCursor;
+begin
+
+end;
+
+function TView.ClientToScreen(X, Y: SW_Integer): TPoint;
+var
+  LParent: TGroup;
+  ClientArea: TRect;
+  ScrollOffset: TPoint;
+  CurBounds: TRect;
+  L,T : Integer;
+begin
+  L := Left + X;
+  T := Top  + Y;
+  LParent := Parent;
+  while LParent<>nil do begin
+    inc(L, LParent.Left);
+    inc(T, LParent.Top);
+    LParent := LParent.Parent;
+    {Parent:=AComponent.GetParentComponent;
+    if Parent=nil then break;
+    GetBounds(AComponent,CurBounds);
+    inc(Result.X,CurBounds.Left);
+    inc(Result.Y,CurBounds.Top);
+    GetClientArea(Parent,ClientArea,ScrollOffset);
+    inc(Result.X,ClientArea.Left+ScrollOffset.X);
+    inc(Result.Y,ClientArea.Top+ScrollOffset.Y);
+    AComponent:=Parent;}
+  end;
+  Result := Point(L,T);
+end;
+
+function TView.ClientToScreen(P: TPoint): TPoint;
+begin
+  Result :=  ClientToScreen(P.X, P.Y);
+end;
+
+procedure TView.BeginPainting;
+begin
+  inc(FPaintPending);
+end;
+
+procedure TView.EndPainting;
+begin
+  dec(FPaintPending);
+end;
+
+function TView.Painting: Boolean;
+begin
+  result := FPaintPending > 0;
+end;
 
 initialization
   Video.ScreenHeight := 25;

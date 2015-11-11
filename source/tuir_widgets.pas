@@ -28,7 +28,7 @@ type
   TtuiLabel = class (TStaticText)
   public
     constructor Create(AOwner: TComponent); override;
-    procedure Paint; override;
+    procedure Draw; override;
   end;
 
   TLabel = class(TtuiLabel)
@@ -44,8 +44,9 @@ begin
   inherited Create(AOwner);
 end;
 
-procedure TtuiLabel.Paint;
+procedure TtuiLabel.Draw;
 begin
+  inherited Draw;
   MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, $7c7f);
 end;
 
