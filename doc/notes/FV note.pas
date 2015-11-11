@@ -36,6 +36,7 @@
 * procedure TView.DrawUnderView(DoShadow: Boolean; LastView: PView);
   // it shall invalidate the screen because it is final call on Show/Hide
   // I can't believe : why this method is called after 'DrawView' on DrawShow ?
+  // it seem 
 	var
 	  R: TRect;
 	begin
@@ -139,7 +140,7 @@ end;
 	   TDrawBuffer = Array [0..MaxViewWidth - 1] Of Word; { Draw buffer record }
 	   PDrawBuffer = ^TDrawBuffer;                        { Ptr to draw buffer }  
    
-	* PROCEDURE TView.Draw;
+	* PROCEDURE TView.Draw; <===================== EACH TYPE OF WIDGET REIMPLEMENTS THIS
 	VAR B : TDrawBuffer;
 	BEGIN
 	  MoveChar(B, ' ', GetColor(1), Size.X);
@@ -153,6 +154,70 @@ end;
 	   else
 		 WriteBuf(0,0,Size.X,Size.Y,Buffer);
 	END;
+	
+	* PROCEDURE TButton.Draw;
+		VAR I, J, Pos: Sw_Integer;
+			Bc: Word; Db: TDrawBuffer;
+			C : char;
+		BEGIN
+		   If (State AND sfDisabled <> 0) Then                { Button disabled }
+			 Bc := GetColor($0404) Else Begin                 { Disabled colour }
+			   Bc := GetColor($0501);                         { Set normal colour }
+			   If (State AND sfActive <> 0) Then              { Button is active }
+				 If (State AND sfSelected <> 0) Then
+				   Bc := GetColor($0703) Else                 { Set selected colour }
+					 If AmDefault Then Bc := GetColor($0602); { Set is default colour }
+			 End;
+		   if title=nil then
+			begin
+			  MoveChar(Db[0],' ',GetColor(8),1);
+			  {No title, draw an empty button.}
+			  for j:=sw_integer(downflag) to size.x-2 do
+				MoveChar(Db[j],' ',Bc,1);
+			end
+		   else
+			{We have a title.}
+			begin
+			 If (Flags AND bfLeftJust = 0) Then Begin         { Not left set title }
+			   I := CTextWidth(Title^);                        { Fetch title width }
+			   I := (Size.X - I) DIV 2;                    { Centre in button }
+			 End
+			 Else
+			   I := 1;                         { Left edge of button }
+			 If DownFlag then
+			   begin
+				 MoveChar(Db[0],' ',GetColor(8),1);
+				 Pos:=1;
+			   end
+			 else
+			   pos:=0;
+			 For j:=0 to I-1 do
+			   MoveChar(Db[pos+j],' ',Bc,1);
+			 MoveCStr(Db[I+pos], Title^, Bc);                        { Move title to buffer }
+			 For j:=pos+CStrLen(Title^)+I to size.X-2 do
+			   MoveChar(Db[j],' ',Bc,1);
+			end;
+			If not DownFlag then
+			  Bc:=GetColor(8);
+			MoveChar(Db[Size.X-1],' ',Bc,1);
+			WriteLine(0, 0, Size.X,1, Db);                  { Write the title }
+			If Size.Y>1 then Begin
+			  Bc:=GetColor(8);
+			  if not DownFlag then
+				begin
+				  c:='Ü';
+				  MoveChar(Db,c,Bc,1);
+				  WriteLine(Size.X-1, 0, 1, 1, Db);
+				end;
+			  MoveChar(Db,' ',Bc,1);
+			  if DownFlag then c:=' '
+			  else c:='ß';
+			  MoveChar(Db[1],c,Bc,Size.X-1);
+			  WriteLine(0, 1, Size.X, 1, Db);
+			End;
+		END;     
+
+		
 	
 		* procedure TGroup.DrawSubViews(P, Bottom: PView);
 		begin
@@ -362,7 +427,7 @@ BEGIN
      FillChar(FixUpList^, Count*SizeOf(Pointer), #0); { Zero all entries }
      For I := 1 To Count Do Begin
        V := PView(S.Get);                             { Get view off stream }
-       If (V <> Nil) Then InsertView(V, Nil);         { Insert valid views }
+       If (V <> Nil) Then InsertView(V, Nil);         { Insert valid views } <-----------------------
      End;
      V := Last;                                       { Start on last view }
      For I := 1 To Count Do Begin
@@ -493,6 +558,9 @@ TYPE
 	   If (MenuBar <> Nil) Then Insert(MenuBar);          { Insert menu bar }
 	END; 	
 	
+	
+======================= P A R E N T I N G + S I B L I N G   ========================	
+
 	* PROCEDURE TGroup.Insert (P: PView);
 	BEGIN
 	  BeforeInsert(P);
@@ -503,15 +571,30 @@ TYPE
 		* TGroup = OBJECT (TView)
 			 Phase   : (phFocused, phPreProcess, phPostProcess);
 			 EndState: Word;                              { Modal result }
-			 Current : PView;                             { Selected subview }
+			 Current : PView;                             { Selected subview } // =activeControl ?
 			 Last    : PView;                             { 1st view inserted }
-			 Buffer  : PVideoBuf;                         { Speed up buffer }    
+			 Buffer  : PVideoBuf;                         { Speed up buffer }   
+			FUNCTION First: PView;
 			 
 		* FUNCTION TGroup.First: PView;
 			BEGIN
 			   If (Last = Nil) Then First := Nil                  { No first view }
 				 Else First := Last^.Next;                        { Return first view }
 			END; 
+			
+		* FUNCTION TView.Prev: PView;
+		VAR NP : PView;
+		BEGIN
+		   Prev := @Self;
+		   NP := Next;
+		   While (NP <> Nil) AND (NP <> @Self) Do
+			 Begin
+			   Prev := NP;                                       { Locate next view }
+			   NP := NP^.Next;
+			 End;
+		END;
+			
+			
 			
 		* PROCEDURE TGroup.InsertBefore (P, Target: PView);
 		VAR SaveState : Word;
@@ -534,18 +617,24 @@ TYPE
 		
 		* PROCEDURE TGroup.InsertView (P, Target: PView);
 		BEGIN
-		   If (P <> Nil) Then Begin                           { Check view is valid }
-			 P^.Owner := @Self;                               { Views owner is us }
-			 If (Target <> Nil) Then Begin                    { Valid target }
-			   Target := Target^.Prev;                        { 1st part of chain }
-			   P^.Next := Target^.Next;                       { 2nd part of chain }
-			   Target^.Next := P;                             { Chain completed }
-			 End Else Begin
-			   If (Last <> Nil) Then Begin                    { Not first view }
-				 P^.Next := Last^.Next;                       { 1st part of chain }
-				 Last^.Next := P;                             { Completed chain }
-			   End Else P^.Next := P;                         { 1st chain to self }
-			   Last := P;                                     { P is now last }
-			 End;
-		   End;
+			If (P <> Nil) Then Begin                           { Check view is valid }
+				P^.Owner := @Self;                               { Views owner is us }
+
+				If (Target <> Nil) Then                            { Valid target }
+				Begin                    
+					Target := Target^.Prev;                        { 1st part of chain }
+					P^.Next := Target^.Next;                       { 2nd part of chain }
+					Target^.Next := P;                             { Chain completed }
+				End 
+				Else 
+				Begin // Target=nil. whatever, the incoming view become the Last!
+					If (Last <> Nil) Then Begin                    { Not first view }
+						P^.Next := Last^.Next;                       { 1st part of chain }
+						Last^.Next := P;                             { Completed chain }
+					End 
+					Else 
+						P^.Next := P;                             { 1st chain to self }
+					Last := P;                                     { P is now last }
+				End;
+			End;
 		END;    
