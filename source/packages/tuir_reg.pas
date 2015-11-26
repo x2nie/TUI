@@ -12,7 +12,7 @@ uses PropEdits,tuir_prop_color, Tuir, Tuir_Widgets;
 
 procedure Register;
 begin
-  RegisterComponents('Standard',[TtuiLabel]);
+  RegisterComponents('Standard',[TtuiLabel, TtuiFrame]);
 
   RegisterPropertyEditor(TypeInfo(word), TView, 'Color', TTuiColorEditor);
 

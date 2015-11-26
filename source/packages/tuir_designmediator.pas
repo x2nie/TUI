@@ -285,7 +285,7 @@ procedure TTuirMediator.Paint;
   var
     Buf : TBuf;
     BufP : PBuf;
-    x,y : Integer;
+    x,y,x1,y1 : Integer;
     s :   string;
     LastAtt : byte;
   begin
@@ -317,12 +317,19 @@ procedure TTuirMediator.Paint;
       LastAtt := Buf.Att;}
       LastAtt := $FE;
 
+      //we should offset the Window on BufferScreen into DesignerForm
+      x1 := FMyForm.Left;
+      y1 := FMyForm.Top;
 
-      for y := 0 to Pred( Min(ScreenHeight, FMyForm.Height) ) do
+      //but now we are in designtime
+      x1 := 0;
+      y1 := 0;
+
+      for y := y1 to Pred( Min(ScreenHeight, y1+FMyForm.Height) ) do
       begin
-        x := 0;
+        x := x1;
         //BufP := Pointer(VideoBuf + (((y * ScreenWidth) + x) * SizeOf(TVideoCell)) );
-        while x < Min(ScreenWidth, self.FMyForm.Width)  do
+        while x < Min(ScreenWidth, x1+self.FMyForm.Width)  do
         begin
           BufP := PBuf(longint(VideoBuf) + (y * ScreenWidth + x) * SizeOf(TVideoCell) );
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
@@ -332,7 +339,7 @@ procedure TTuirMediator.Paint;
             LastAtt := BufP^.Att;
           end;
           //if BufP^.S > #30 then
-            TextOut(x * FontWidth, y * FontHeight, BufP^.S);
+            TextOut((x-x1) * FontWidth, (y-y1) * FontHeight, BufP^.S);
 
           //inc(BufP, sizeof(TBuf));
           inc(x);

@@ -420,7 +420,7 @@ end;
 constructor TCustomWindow.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
-  FFrame := TFrame.Create(self);
+  //FFrame := TFrame.Create(self);
 end;
 
 
@@ -551,7 +551,15 @@ begin
   begin
     if FSizeIsDirty then
       RealignChildren;
+    FSizeIsDirty := False;
+    FPosIsDirty := False;
+    FPrevLeft   := FLeft;
+    FPrevTop    := FTop;
+    FPrevWidth  := FWidth;
+    FPrevHeight := FHeight;
+
     DrawUnderView;
+
   end
   else
     DrawView;
@@ -829,7 +837,7 @@ begin
   begin
     B := Parent.FPrevHeight - (Top + Height -1); //distance to bottom
     if akTop in FAnchors then
-      H := (Parent.Height - B) - Left
+      H := (Parent.Height - B) - Top
     else
       T := Top - B;
   end;
@@ -875,6 +883,9 @@ begin
   Result := nil;
 end;
 
+{ this is the final last chance to write to buffer
+  so, both runtime and designtime should take care of
+  what going on by this routine }
 procedure TView.WriteLine(X, Y, W, H: Sw_Integer; var Buf);
 var
   J:Sw_integer;
@@ -942,10 +953,25 @@ var
   CurBounds: TRect;
   L,T : Integer;
 begin
-  L := Left + X;
-  T := Top  + Y;
+  L := X + Left;
+  T := Y + Top;
+
+  {if ( self is TView) and (Designer <> nil) then // happen in root-designer-object
+  begin
+    dec(L, Left);
+    dec(T, Top);
+  end;}
+
   LParent := Parent;
-  while LParent<>nil do begin
+  while LParent<>nil do
+  begin
+
+    { this is the final last chance to write to buffer
+      so, both runtime and designtime should take care of
+      what going on by this line }
+    if ( LParent is TView) and (Designer <> nil) then // happen in root-designer-object
+      break;
+
     inc(L, LParent.Left);
     inc(T, LParent.Top);
     LParent := LParent.Parent;
