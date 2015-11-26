@@ -323,7 +323,7 @@ procedure TTuirMediator.Paint;
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin
-            ApplyColor(BufP^.Att);
+            //ApplyColor(BufP^.Att);
             LastAtt := BufP^.Att;
           end;
           //if BufP^.S > #30 then

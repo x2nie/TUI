@@ -45,9 +45,13 @@ begin
 end;
 
 procedure TtuiLabel.Draw;
+var B: TDrawBuffer;
 begin
-  inherited Draw;
-  MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, $7c7f);
+  //inherited Draw;
+  MoveChar(B[0], ' ', Byte(Color), Width);          { Clear the buffer }
+  MoveCStr(B[1], FText, Color);{ Transfer label text }
+  //MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, $7c7f);
+  WriteLine(0, 0, Width, 1, B);                     { Write the text }
 end;
 
 { TStaticText }

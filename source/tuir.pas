@@ -214,29 +214,42 @@ type
 
   TGroup = class(TView)
   private
+    FClipRect: TRect;
     function GetBuffer: PVideoBuf;
-    procedure ChildrenDrawView(Child: TComponent); 
+    procedure ChildrenDrawView(Child: TComponent);
+    procedure ChildrenDrawViewInClipRect(Child: TComponent);
+
   protected
     FBuffer: PVideoBuf;
     procedure Draw; override;
+    property ClipRect : TRect read FClipRect write FClipRect;
   public
     property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer } 
     constructor Create(AOwner: TComponent); override;
-    procedure DrawSubViews(Sender: TView = nil);
-
-  end;
-
-  TCustomWindow = class(TGroup) //doesn't load *.lfm
+    procedure DrawSubViews(R: TRect); overload;
+    procedure DrawSubViews(); overload;
 
   end;
 
   { TFrame }
 
   TFrame = class(TView)
+  protected
+    procedure Draw; override;
   public
     constructor Create(AOwner: TComponent); override;
 
   end;
+
+  { TCustomWindow }
+
+  TCustomWindow = class(TGroup) //doesn't load *.lfm
+  private
+    FFrame : TFrame;
+  public
+    constructor Create(AOwner: TComponent); override;
+  end;
+
 
   { TtuiWindow }
 
@@ -257,6 +270,9 @@ type
 
 
   function GetScreenBufPos(x,y: integer ): Pointer;
+
+var
+  EmptyRect : TRect;
 
 implementation
 
@@ -352,6 +368,14 @@ begin
   Result := R1;
 end;
 
+function IsRectIntersectEmpty (R1,R2: TRect):Boolean;
+var R : TRect;
+begin
+  R :=  RectIntersect(R1,R2);
+  CheckEmpty(R);
+  Result := RectEquals(R,EmptyRect);
+end;
+
 {--TRect--------------------------------------------------------------------}
 {  Move -> Platforms DOS/DPMI/WIN/OS2 - Checked 10May96 LdB                 }
 {---------------------------------------------------------------------------}
@@ -379,8 +403,21 @@ begin
   end;
 end;
 
+{ TCustomWindow }
+
+constructor TCustomWindow.Create(AOwner: TComponent);
+begin
+  inherited Create(AOwner);
+  FFrame := TFrame.Create(self);
+end;
+
 
 { TFrame }
+
+procedure TFrame.Draw;
+begin
+  inherited Draw;
+end;
 
 constructor TFrame.Create(AOwner: TComponent);
 begin
@@ -394,7 +431,15 @@ end;
 
 procedure TGroup.ChildrenDrawView(Child: TComponent);
 begin
-  TView(Child).DrawView;     
+  TView(Child).DrawView;
+end;
+
+procedure TGroup.ChildrenDrawViewInClipRect(Child: TComponent);
+var cv : TView;
+begin
+  cv := TView(Child);
+  if not IsRectIntersectEmpty(cv.BoundsRect, FClipRect) then
+    cv.DrawView;
 end;
 
 constructor TGroup.Create(AOwner: TComponent);
@@ -407,16 +452,27 @@ procedure TGroup.Draw;
 begin
   inherited Draw;
   ///If Buffer=Nil then
-    DrawSubViews()
+    Self.DrawSubViews()
   ///else
     ///WriteBuf(0,0,Size.X,Size.Y,Buffer);
 end;
 
-procedure TGroup.DrawSubViews(Sender: TView);
+procedure TGroup.DrawSubViews();
 begin
   GetChildren(@ChildrenDrawView,Self);
 		{# it is called by:
 			- TView.DrawUnderRec
+			> TGroup.Draw;
+			> TGroup.Redraw}
+end;
+
+procedure TGroup.DrawSubViews(R: TRect);
+begin
+  FClipRect := R;
+  GetChildren(@ChildrenDrawViewInClipRect,Self);
+  FClipRect := EmptyRect;
+		{# it is called by:
+			> TView.DrawUnderRec
 			- TGroup.Draw;
 			- TGroup.Redraw}
 end;
@@ -464,7 +520,7 @@ end;
 
 procedure TView.Invalidate(RefreshParent: Boolean = False);
 begin
-  if {Painting or} (csLoading in ComponentState) then exit;
+  //if {Painting or} (csLoading in ComponentState) then exit;
 
   //paint;
   if RefreshParent then
@@ -649,7 +705,7 @@ end;
 
 
 procedure TView.DrawUnderView;
-  // it shall invalidate the screen because it is final call on Show/Hide
+  // it shall invalidate the screen because it is final call on Show,Hide,Move,Resize
   // I can't believe : why this method is called after 'DrawView' on DrawShow ?
   // it seem 
 var
@@ -665,11 +721,15 @@ end;
 
 procedure TView.DrawUnderRect(var R: TRect);
   // it shall invalidate the screen because it is final call on Show/Hide
+var
+  oldBounds : TRect;
 begin
   if HasParent then begin
     //Owner^.Clip.Intersect(R);
     //todo: is it need to suply self or R ?
-    Parent.DrawSubViews(self);//(NextView, LastView); //it seem as later calls DrawView also. So, DoShow call double DrawView. I guessing.
+    oldBounds := Bounds( FPrevLeft, FPrevTop, FPrevWidth, FPrevHeight);
+    R := RectUnion( R, oldBounds);
+    Parent.DrawSubViews(R);//(NextView, LastView); //it seem as later calls DrawView also. So, DoShow call double DrawView. I guessing.
     //Owner^.GetExtent(Owner^.Clip); //reset to bounds
   end;
 end;
@@ -774,7 +834,7 @@ procedure TView.Draw;
 var B : TDrawBuffer;
 begin
 	  //MoveChar(B, '&', GetColor(1), Width);
-    MoveChar(B, '&', Self.FColor, Width);
+    MoveChar(B, ' ', Self.FColor, Width);
 	  WriteLine(0, 0, Width, Height, B);
 end;
 
@@ -856,6 +916,7 @@ begin
 end;
 
 initialization
+  EmptyRect := Rect(0,0,0,0);
   Video.ScreenHeight := 25;
   Video.ScreenWidth := 80;
 end.
