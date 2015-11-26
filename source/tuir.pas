@@ -106,6 +106,8 @@ type
   ITUIRDesigner = interface;
 
   TVideoBuf = array[0..4095] of TVideoCell; //80 x 50, aligned
+  TAnchorKind = (akTop, akLeft, akRight, akBottom);
+  TAnchors = set of TAnchorKind;
 
   { TView }
 
@@ -113,12 +115,14 @@ type
 
   TView = class(TComponent)
   private
+    FAnchors: TAnchors;
     FDesigner: ITUIRDesigner;
     //FParent: TView;
     function    ConstraintWidth(NewWidth: Integer): Integer;
     function    ConstraintHeight(NewHeight: Integer): Integer;
     //function GetControlChildren(Index: integer): TView;
     function GetDesigner: ITUIRDesigner;
+    procedure SetAnchors(AValue: TAnchors);
     procedure SetColor(AValue: Word);
     function GetBoundsRect: TRect;
     procedure SetBoundsRect(const Value: TRect);
@@ -156,6 +160,7 @@ type
     procedure   SetWidth(const AValue: Integer);
     procedure   HandleMove(x, y: Integer); virtual;
     procedure   HandleResize(AWidth, AHeight: Integer); virtual;
+    procedure   RealignChildren; virtual;
   protected
     {requires by IDE}
     //FChilds: TList; // list of Widget
@@ -191,7 +196,8 @@ type
     procedure SetBounds(ALeft,ATop, AWidth, AHeight: Integer); virtual;
     procedure GetBounds(var R: TRect);
     property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
-    procedure DrawView; virtual;	
+    procedure DrawView; virtual;
+    procedure ParentResized; virtual; //called by parent, to realign / anchoring
     function GetColor (Color: Word): Word;
     function GetPalette: PPalette; Virtual;
     procedure WriteLine (X, Y, W, H: Sw_Integer; Var Buf);
@@ -208,6 +214,7 @@ type
     property    MinHeight: Integer read FMinHeight write FMinHeight  default 0;
     property    MaxWidth: Integer read FMaxWidth write FMaxWidth default 0;
     property    MaxHeight: Integer read FMaxHeight write FMaxHeight default 0;
+    property  Anchors : TAnchors read FAnchors write SetAnchors default [akLeft, akTop];
   end;
 
   { TGroup }
@@ -218,11 +225,13 @@ type
     function GetBuffer: PVideoBuf;
     procedure ChildrenDrawView(Child: TComponent);
     procedure ChildrenDrawViewInClipRect(Child: TComponent);
+    procedure ChildrenParentResize(Child: TComponent);
 
   protected
     FBuffer: PVideoBuf;
     procedure Draw; override;
     property ClipRect : TRect read FClipRect write FClipRect;
+    procedure   RealignChildren; override;
   public
     property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer } 
     constructor Create(AOwner: TComponent); override;
@@ -238,6 +247,9 @@ type
     procedure Draw; override;
   public
     constructor Create(AOwner: TComponent); override;
+
+  end;
+  TtuiFrame = class(TFrame)
 
   end;
 
@@ -442,6 +454,11 @@ begin
     cv.DrawView;
 end;
 
+procedure TGroup.ChildrenParentResize(Child: TComponent);
+begin
+  TView(Child).ParentResized;
+end;
+
 constructor TGroup.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
@@ -455,6 +472,13 @@ begin
     Self.DrawSubViews()
   ///else
     ///WriteBuf(0,0,Size.X,Size.Y,Buffer);
+end;
+
+procedure TGroup.RealignChildren;
+var t : Talignment;
+begin
+  //inherited RealignChildren;
+  GetChildren(@ChildrenParentResize,Self);
 end;
 
 procedure TGroup.DrawSubViews();
@@ -513,7 +537,7 @@ begin
   FMaxWidth  := 0;
   FMaxHeight := 0;
   //FChilds := TList.Create;
-
+  FAnchors := [akLeft, akTop];
   FColor := $7c7f;//debug
 end;
 
@@ -523,8 +547,12 @@ begin
   //if {Painting or} (csLoading in ComponentState) then exit;
 
   //paint;
-  if RefreshParent then
-    DrawUnderView
+  if FSizeIsDirty or  FPosIsDirty {RefreshParent} then
+  begin
+    if FSizeIsDirty then
+      RealignChildren;
+    DrawUnderView;
+  end
   else
     DrawView;
     
@@ -576,6 +604,12 @@ begin
      result := Parent.Designer
   else
     result := FDesigner;
+end;
+
+procedure TView.SetAnchors(AValue: TAnchors);
+begin
+  if FAnchors=AValue then Exit;
+  FAnchors:=AValue;
 end;
 
 procedure TView.SetColor(AValue: Word);
@@ -659,6 +693,11 @@ begin
     Invalidate(True);
   //if Designer <> nil then
     //Designer.InvalidateBound(self);
+end;
+
+procedure TView.RealignChildren;
+begin
+
 end;
 
 function TView.ChildrenCount: integer;
@@ -767,6 +806,34 @@ begin
      DrawScreenBuf(false); //<------------------------------------ CALL VIDEO TO UPDATE ????
      DrawCursor;
    end;
+end;
+
+procedure TView.ParentResized;
+var
+  L,T,R,B,W,H : Integer;
+begin
+  L := Left;
+  T := Top;
+  W := Width;
+  H := Height;
+  if akRight in FAnchors then
+  begin
+    R := Parent.FPrevWidth - (Left + Width -1); //distance to right
+    if akLeft in FAnchors then
+      W := (Parent.Width - R) - Left
+    else
+      L := Left - R;
+  end;
+
+  if akBottom in FAnchors then
+  begin
+    B := Parent.FPrevHeight - (Top + Height -1); //distance to bottom
+    if akTop in FAnchors then
+      H := (Parent.Height - B) - Left
+    else
+      T := Top - B;
+  end;
+  self.SetBounds(L,T,W,H);
 end;
 
 function TView.GetColor(Color: Word): Word;

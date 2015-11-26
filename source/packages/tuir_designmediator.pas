@@ -51,6 +51,31 @@ type
   end;
 
 
+Const
+  TERMINAL_FONT_NAME = 'Terminal'; //it's Windows XP, what else?
+  TERMINAL_FONT_SIZE = 10;
+const
+  LCLColors : array[0..$F] of TColor = (
+    //lowres:
+    clBlack   ,
+    clNavy    ,
+    clGreen   ,
+    clTeal    ,
+    clMaroon  ,
+    clPurple  ,
+    clOlive   ,
+    clSilver  ,
+    //highres:
+    clGray    ,
+    $00FF5252 ,//clNavy    ,
+    clLime    ,
+    clAqua    ,
+    clRed     ,
+    clFuchsia ,
+    clYellow  ,
+    clWhite
+  );
+
 procedure Register;
 
 implementation
@@ -67,27 +92,7 @@ end;
 var
   FontWidth, FontHeight : Integer;
 
-const
-  LCLColors : array[0..$F] of TColor = (
-    //lowres:
-    clBlack   ,
-    clBlue    ,
-    clGreen   ,
-    clTeal    ,
-    clMaroon  ,
-    clPurple  ,
-    clOlive   ,
-    clSilver  ,
-    //highres:
-    clGray    ,
-    clNavy    ,
-    clLime    ,
-    clAqua    ,
-    clRed     ,
-    clFuchsia ,
-    clYellow  ,
-    clWhite
-  );
+
 
 constructor TTuirMediator.Create(AOwner: TComponent);
 begin
@@ -267,11 +272,11 @@ procedure TTuirMediator.Paint;
     begin
       with LCLForm.Canvas do begin
         //background
-        c := Att and $F;
+        c := (Att and $F0) shr 4;
         Brush.Color := LCLColors[c];
 
         //text
-        c := (Att and $F0) shr 4;
+        c := Att and $F;
         Font.Color := LCLColors[c];
 
       end;
@@ -287,8 +292,8 @@ procedure TTuirMediator.Paint;
     with LCLForm do
     begin
     //try
-      Font.Size := 10;
-      Font.Name:='Terminal'; //it's Windows XP, what else?
+      Font.Size := TERMINAL_FONT_SIZE;
+      Font.Name:= TERMINAL_FONT_NAME;
     //except    end;
     end;
 
@@ -323,7 +328,7 @@ procedure TTuirMediator.Paint;
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin
-            //ApplyColor(BufP^.Att);
+            ApplyColor(BufP^.Att);
             LastAtt := BufP^.Att;
           end;
           //if BufP^.S > #30 then

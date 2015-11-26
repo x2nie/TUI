@@ -7,7 +7,8 @@ unit Tuir_designtime;
 interface
 
 uses
-  Tuir_reg, Tuir_designMediator, Tuir_designdescriptor, LazarusPackageIntf;
+  Tuir_reg, Tuir_designMediator, Tuir_designdescriptor, tuir_prop_color, 
+  LazarusPackageIntf;
 
 implementation
 

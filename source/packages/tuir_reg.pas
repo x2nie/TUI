@@ -8,11 +8,13 @@ uses
 procedure Register;
 
 implementation
-uses PropEdits,Tuir, Tuir_Widgets;
+uses PropEdits,tuir_prop_color, Tuir, Tuir_Widgets;
 
 procedure Register;
 begin
-  RegisterComponents('Standard',[TtuiLabel, TLabel]);
+  RegisterComponents('Standard',[TtuiLabel]);
+
+  RegisterPropertyEditor(TypeInfo(word), TView, 'Color', TTuiColorEditor);
 
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Caption', TStringMultilinePropertyEditor);
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Text', TStringMultilinePropertyEditor);

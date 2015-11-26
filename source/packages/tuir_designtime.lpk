@@ -9,7 +9,7 @@
       <Version Value="11"/>
       <PathDelim Value="\"/>
       <SearchPaths>
-        <OtherUnitFiles Value="."/>
+        <OtherUnitFiles Value=".;.."/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
     </CompilerOptions>
@@ -17,7 +17,7 @@
     <License Value="GPL v2
 it uses/derives some part of Lazarus IDE/Designer, so it must be GPL"/>
     <Version Minor="2"/>
-    <Files Count="3">
+    <Files Count="4">
       <Item1>
         <Filename Value="tuir_reg.pas"/>
         <HasRegisterProc Value="True"/>
@@ -33,6 +33,10 @@ it uses/derives some part of Lazarus IDE/Designer, so it must be GPL"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="Tuir_designdescriptor"/>
       </Item3>
+      <Item4>
+        <Filename Value="tuir_prop_color.pas"/>
+        <UnitName Value="tuir_prop_color"/>
+      </Item4>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
