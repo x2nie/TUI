@@ -19,7 +19,7 @@ type
     FMyForm: TtuiWindow;
     FUpdateCount : integer;
     //ITUIDesigner
-    procedure InvalidateRect(Sender: TObject);
+    procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
     procedure BeginUpdate;
     procedure EndUpdate;
@@ -40,6 +40,8 @@ type
     function ComponentIsIcon(AComponent: TComponent): boolean; override;
     function ParentAcceptsChild(Parent: TComponent;
                 Child: TComponentClass): boolean; override;
+    procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+
   public
     // needed by TView
     constructor Create(AOwner: TComponent); override;
@@ -106,10 +108,17 @@ begin
   inherited Destroy;
 end;
 
-procedure TTuirMediator.InvalidateRect(Sender: TObject);
+procedure TTuirMediator.InvalidateRect(ConsoleRect: TRect);
+var R : TRect;
 begin
   if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
-  //LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
+  with ConsoleRect do begin
+    R.Left  := Left * FontWidth;
+    R.Right := Right * FontWidth;
+    R.Top   := Top * FontHeight;
+    R.Bottom:= Bottom * FontHeight;
+  end;
+  LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
 end;
 
 procedure TTuirMediator.InvalidateBound(Sender: TObject);
@@ -222,8 +231,8 @@ var w,h : integer;
 begin //here the form created by ide.new() -> width=50,height=50
   BeginUpdate;
   if AComponent is TView then begin
-    w := (NewBounds.Right-NewBounds.Left);// div FontWidth;
-    h := (NewBounds.Bottom-NewBounds.Top);// div FontHeight;
+    w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
+    h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
     if (w=50) and (h=50) and (AComponent is TtuiWindow) then
     with TView(AComponent) do begin
       w := Width;
@@ -364,6 +373,22 @@ function TTuirMediator.ParentAcceptsChild(Parent: TComponent;
   Child: TComponentClass): boolean;
 begin
   Result:=(Parent is TGroup) and Child.InheritsFrom(TView);
+end;
+
+procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
+  NewBounds: TRect);
+begin
+  if (AComponent is TView) and (NewParent <> nil)  then
+  begin
+    if AComponent.Owner <> nil then
+      AComponent.Owner.RemoveComponent(AComponent);
+    //AComponent.Owner := nil;
+    if NewParent <> nil then
+      NewParent.InsertComponent(AComponent);
+
+  end
+  else
+    inherited InitComponent(AComponent, NewParent, NewBounds);
 end;
 
 //--- copied from video.inc because these are has no `interface`

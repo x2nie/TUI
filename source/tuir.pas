@@ -230,6 +230,7 @@ type
   protected
     FBuffer: PVideoBuf;
     procedure Draw; override;
+    procedure DrawClippedRect; virtual;
     property ClipRect : TRect read FClipRect write FClipRect;
     procedure   RealignChildren; override;
   public
@@ -276,7 +277,7 @@ type
   { proxy designer for TMediatorDesigner }
 
   ITUIRDesigner = interface(IUnknown)
-    procedure InvalidateRect(Sender: TObject);
+    procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
   end;
 
@@ -467,11 +468,30 @@ end;
 
 procedure TGroup.Draw;
 begin
-  inherited Draw;
+  DrawClippedRect; //inherited Draw;
   ///If Buffer=Nil then
     Self.DrawSubViews()
   ///else
     ///WriteBuf(0,0,Size.X,Size.Y,Buffer);
+end;
+
+
+procedure TGroup.DrawClippedRect;
+var
+  B : TDrawBuffer;
+  R : TRect;
+begin
+  if RectEquals(FClipRect, EmptyRect) then
+    R := BoundsRect
+  else
+    R := FClipRect;
+
+  with R do begin
+    //MoveChar(B, '&', GetColor(1), Width);
+    MoveChar(B, ' ', Self.FColor, Right-Left);
+    WriteLine(Left, Top, Right-Left, Bottom-Top, B);
+  end;
+
 end;
 
 procedure TGroup.RealignChildren;
@@ -493,6 +513,8 @@ end;
 procedure TGroup.DrawSubViews(R: TRect);
 begin
   FClipRect := R;
+  DrawClippedRect; //inherited Draw;
+
   GetChildren(@ChildrenDrawViewInClipRect,Self);
   FClipRect := EmptyRect;
 		{# it is called by:
@@ -543,6 +565,7 @@ end;
 
 
 procedure TView.Invalidate(RefreshParent: Boolean = False);
+var oldBounds : TRect;
 begin
   //if {Painting or} (csLoading in ComponentState) then exit;
 
@@ -551,6 +574,15 @@ begin
   begin
     if FSizeIsDirty then
       RealignChildren;
+
+    DrawUnderView;
+
+    if Designer <> nil then
+    begin
+      oldBounds := Bounds( FPrevLeft, FPrevTop, FPrevWidth, FPrevHeight);
+      Designer.InvalidateRect(oldBounds);
+    end;
+
     FSizeIsDirty := False;
     FPosIsDirty := False;
     FPrevLeft   := FLeft;
@@ -558,14 +590,12 @@ begin
     FPrevWidth  := FWidth;
     FPrevHeight := FHeight;
 
-    DrawUnderView;
-
   end
   else
     DrawView;
     
   if Designer <> nil then
-    Designer.InvalidateRect(self);
+    Designer.InvalidateRect(self.BoundsRect);
 end;
 
 (*procedure TView.Paint;
@@ -783,16 +813,17 @@ end;
 
 function TView.GetBoundsRect: TRect;
 begin
-  Result.Left := FLeft;
+  {Result.Left := FLeft;
   Result.Top := FTop;
-  Result.Right := FLeft + FWidth;
-  Result.Bottom := FTop + FHeight;
+  Result.Right := FLeft + FWidth ;
+  Result.Bottom := FTop + FHeight ;}
+  Result := Bounds(FLeft, FTop, FWidth, FHeight);
 end;
 
 procedure TView.SetBoundsRect(const Value: TRect);
 begin
   with Value do
-    SetBounds(Left, Top, Right - Left, Bottom - Top);
+    SetBounds(Left, Top, Right - Left , Bottom - Top );
 end;
 
 procedure TView.GetBounds(var R: TRect);
@@ -900,7 +931,7 @@ begin
     R := RectIntersect(R, ScreenRect);
     with R do begin
       for J := Top to Bottom do
-        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Left,J)^, (Right-Left) * sizeof(TVideoCell));
+        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
     end;
     DrawScreenBuf(false);
   end;
@@ -953,14 +984,14 @@ var
   CurBounds: TRect;
   L,T : Integer;
 begin
-  L := X + Left;
-  T := Y + Top;
+  L := X ;
+  T := Y ;
 
-  {if ( self is TView) and (Designer <> nil) then // happen in root-designer-object
+  if not ((self is TCustomWindow) and (Designer <> nil)) then // happen in root-designer-object
   begin
-    dec(L, Left);
-    dec(T, Top);
-  end;}
+    inc(L, Left);
+    inc(T, Top);
+  end;
 
   LParent := Parent;
   while LParent<>nil do
@@ -969,7 +1000,7 @@ begin
     { this is the final last chance to write to buffer
       so, both runtime and designtime should take care of
       what going on by this line }
-    if ( LParent is TView) and (Designer <> nil) then // happen in root-designer-object
+    if ( LParent is TCustomWindow) and (Designer <> nil) then // happen in root-designer-object
       break;
 
     inc(L, LParent.Left);
