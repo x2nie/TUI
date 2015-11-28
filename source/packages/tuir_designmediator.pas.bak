@@ -40,7 +40,7 @@ type
     function ComponentIsIcon(AComponent: TComponent): boolean; override;
     function ParentAcceptsChild(Parent: TComponent;
                 Child: TComponentClass): boolean; override;
-    //procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+    procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
 
   public
     // needed by TView
@@ -375,7 +375,7 @@ begin
   Result:=(Parent is TGroup) and Child.InheritsFrom(TView);
 end;
 
-{procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
+procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
   NewBounds: TRect);
 begin
   if (AComponent is TView) and (NewParent <> nil)  then
@@ -389,7 +389,7 @@ begin
   end
   else
     inherited InitComponent(AComponent, NewParent, NewBounds);
-end;}
+end;
 
 //--- copied from video.inc because these are has no `interface`
 //    and we don't want to activate video nor driver

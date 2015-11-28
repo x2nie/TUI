@@ -1,0 +1,38 @@
+object tuiWindow1: TtuiWindow1
+  Color = 28266
+  Left = 31
+  Top = 9
+  Width = 75
+  Height = 30
+  object tuiLabel1: TtuiLabel
+    Color = 40095
+    Left = 35
+    Top = 5
+    Width = 20
+    Height = 16
+    Text = '~tui~Label1'
+  end
+  object tuiLabel2: TtuiLabel
+    Color = 23647
+    Left = 4
+    Top = 6
+    Width = 10
+    Height = 1
+    Text = 'tuiLabel2'
+  end
+  object tuiLabel3: TtuiLabel
+    Color = 31871
+    Left = 15
+    Top = 6
+    Width = 13
+    Height = 4
+    Text = 'tuiLabel3'
+  end
+  object Group1: TGroup
+    Color = 48319
+    Left = 11
+    Top = 11
+    Width = 29
+    Height = 9
+  end
+end

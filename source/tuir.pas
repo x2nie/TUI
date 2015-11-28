@@ -117,6 +117,7 @@ type
   private
     FAnchors: TAnchors;
     FDesigner: ITUIRDesigner;
+    FParent: TGroup;
     //FParent: TView;
     function    ConstraintWidth(NewWidth: Integer): Integer;
     function    ConstraintHeight(NewHeight: Integer): Integer;
@@ -129,6 +130,7 @@ type
     //procedure SetParent(AValue: TView);
     procedure do_WriteView(x1,x2,y:Sw_Integer; var Buf);
     procedure ResetCursor;
+    procedure SetParent(AValue: TGroup);
   protected
     GrowMode : Byte;                             { View grow mode }
     Options  : Word;                             { View options masks }
@@ -167,8 +169,8 @@ type
     //FAcceptChildren : boolean;
     //FText:      string;
     //procedure   SetText(const AValue: string); virtual;
-    //procedure   SetParentComponent(Value: TComponent); override;
-    procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
+    procedure   SetParentComponent(Value: TComponent); override;
+    //procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     //procedure   SetName(const NewName: TComponentName); override;
     //property    Text : string read FText write SetText;
     procedure DrawUnderView;
@@ -177,16 +179,16 @@ type
     procedure DrawCursor;
   public
     // requires by IDE Designer
-    function    ChildrenCount: integer;
+    //function    ChildrenCount: integer;
 
     function    GetParentComponent: TComponent; override;
     function    HasParent: Boolean; override;
-    function    GetParent: TGroup; //override;
+    //function    GetParent: TGroup; //override;
 
     //property    AcceptChildren : boolean read FAcceptChildren;
     //property    Children[Index: integer]: TView read GetControlChildren; //GetChildren has been reserved obove
     //property    Parent: TView read FParent write SetParent;
-    property    Parent   : TGroup read GetParent;
+    property    Parent   : TGroup read FParent write SetParent;
     property    Designer : ITUIRDesigner read GetDesigner write FDesigner;
   public
     ColourOfs: Sw_Integer;                          { View palette offset }
@@ -222,6 +224,10 @@ type
   TGroup = class(TView)
   private
     FClipRect: TRect;
+    FChildren : TFpList;
+    function GetChildIndex(Index : integer): TView;
+    procedure Insert(AChild:TView);
+    procedure Remove(AChild:TView);
     function GetBuffer: PVideoBuf;
     procedure ChildrenDrawView(Child: TComponent);
     procedure ChildrenDrawViewInClipRect(Child: TComponent);
@@ -233,8 +239,11 @@ type
     procedure DrawClippedRect; virtual;
     property ClipRect : TRect read FClipRect write FClipRect;
     procedure   RealignChildren; override;
+    procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
-    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer } 
+    function    ChildrenCount: integer;
+    property Child[Index : integer] : TView read GetChildIndex;
+    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer }
     constructor Create(AOwner: TComponent); override;
     procedure DrawSubViews(R: TRect); overload;
     procedure DrawSubViews(); overload;
@@ -501,6 +510,28 @@ begin
   GetChildren(@ChildrenParentResize,Self);
 end;
 
+procedure TGroup.GetChildren(Proc: TGetChildProc; Root: TComponent);
+var
+  i: Integer;
+begin
+  for i:=0 to ChildrenCount-1 do
+    //if Child[i].Owner=Root then
+      Proc(Child[i]);
+
+  if Root = self then
+    for i:=0 to ComponentCount-1 do
+      if Components[i].GetParentComponent = nil then
+        Proc(Components[i]);
+end;
+
+function TGroup.ChildrenCount: integer;
+begin
+  if FChildren = nil then
+     result :=0
+  else
+    result := FChildren.Count;
+end;
+
 procedure TGroup.DrawSubViews();
 begin
   GetChildren(@ChildrenDrawView,Self);
@@ -523,6 +554,35 @@ begin
 			- TGroup.Redraw}
 end;
 
+procedure TGroup.Insert(AChild: TView);
+begin
+  If not assigned(FChildren) then
+    FChildren:=TFpList.Create;
+  FChildren.Add(AChild);
+  AChild.FParent:=Self;
+end;
+
+function TGroup.GetChildIndex(Index : integer): TView;
+begin
+  if FChildren = nil then
+     result := nil
+  else
+    result := TView(FChildren[Index]);
+end;
+
+procedure TGroup.Remove(AChild: TView);
+begin
+  AChild.FParent:=Nil;
+  If assigned(FChildren) then
+    begin
+    FChildren.Remove(AChild);
+    if FChildren.Count=0 then
+      begin
+      FChildren.Free;
+      FChildren:=Nil;
+      end;
+    end;
+end;
 
 function TGroup.GetBuffer: PVideoBuf;
 begin
@@ -553,7 +613,8 @@ end;
 
 constructor TView.Create(AOwner: TComponent);
 begin
-  inherited;
+  inherited Create(AOwner);
+  //Parent := AOwner;
   FWidth  := 10;
   FHeight := 1;
   FMaxWidth  := 0;
@@ -638,7 +699,7 @@ end;
 
 function TView.GetDesigner: ITUIRDesigner;
 begin
-  if Owner <> nil then
+   if Parent <> nil then
      result := Parent.Designer
   else
     result := FDesigner;
@@ -738,13 +799,18 @@ begin
 
 end;
 
-function TView.ChildrenCount: integer;
+procedure TView.SetParentComponent(Value: TComponent);
 begin
-  result := ComponentCount
+  SetParent(TGroup(Value));
 end;
 
+{function TView.ChildrenCount: integer;
+begin
+  result := ComponentCount
+end;}
+
                                                                           
-procedure TView.GetChildren(Proc: TGetChildProc; Root: TComponent);
+(*procedure TView.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
   i: Integer;
   OwnedComponent: TComponent;
@@ -759,22 +825,22 @@ begin
       OwnedComponent := Components[I];
       if OwnedComponent is TView then Proc(OwnedComponent);
     end;
-end;
+end;*)
 
 function TView.GetParentComponent: TComponent;
 begin
-  Result:= Owner;
+  Result:= Parent;
 end;
 
 function TView.HasParent: Boolean;
 begin
-  Result:= Owner <> nil;
+  Result:= Parent <> nil;
 end;
 
-function TView.GetParent: TGroup;
+{function TView.GetParent: TGroup;
 begin
   result := TGroup(Owner)
-end;
+end;}
 
 
 
@@ -974,6 +1040,15 @@ end;
 procedure TView.ResetCursor;
 begin
 
+end;
+
+procedure TView.SetParent(AValue: TGroup);
+begin
+  if FParent=AValue then Exit;
+  if FParent <> nil then
+     FParent.Remove(self);
+  if AValue <> nil then
+     AValue.Insert(self);
 end;
 
 function TView.ClientToScreen(X, Y: SW_Integer): TPoint;
