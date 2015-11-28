@@ -1,13 +1,13 @@
 object tuiWindow1: TtuiWindow1
   Color = 28266
-  Left = 31
-  Top = 9
-  Width = 75
-  Height = 30
+  Left = 40
+  Top = 7
+  Width = 82
+  Height = 47
   object tuiLabel1: TtuiLabel
     Color = 40095
-    Left = 35
-    Top = 5
+    Left = 20
+    Top = 2
     Width = 20
     Height = 16
     Text = '~tui~Label1'
@@ -29,9 +29,9 @@ object tuiWindow1: TtuiWindow1
     Text = 'tuiLabel3'
   end
   object Group1: TGroup
-    Color = 48319
-    Left = 11
-    Top = 11
+    Color = 23647
+    Left = 4
+    Top = 3
     Width = 29
     Height = 9
   end

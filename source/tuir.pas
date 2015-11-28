@@ -491,7 +491,10 @@ var
   R : TRect;
 begin
   if RectEquals(FClipRect, EmptyRect) then
-    R := BoundsRect
+  begin
+    R := BoundsRect;
+    RectMove(R, -Left, -Top); //clientrect
+  end
   else
     R := FClipRect;
 
