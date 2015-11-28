@@ -128,10 +128,11 @@ type
     function GetBoundsRect: TRect;
     procedure SetBoundsRect(const Value: TRect);
     //procedure SetParent(AValue: TView);
-    procedure do_WriteView(x1,x2,y:Sw_Integer; var Buf);
     procedure ResetCursor;
     procedure SetParent(AValue: TGroup);
+    function GetBuffer: PVideoBuf;
   protected
+    FBuffer  : PVideoBuf;
     GrowMode : Byte;                             { View grow mode }
     Options  : Word;                             { View options masks }
     EventMask: Word;                             { View event masks }
@@ -197,7 +198,6 @@ type
     //procedure Paint; virtual;      //internal paint
     procedure SetBounds(ALeft,ATop, AWidth, AHeight: Integer); virtual;
     procedure GetBounds(var R: TRect);
-    property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
     procedure DrawView; virtual;
     procedure ParentResized; virtual; //called by parent, to realign / anchoring
     function GetColor (Color: Word): Word;
@@ -205,6 +205,9 @@ type
     procedure WriteLine (X, Y, W, H: Sw_Integer; Var Buf);
     function ClientToScreen(X,Y: SW_Integer) : TPoint; overload;
     function ClientToScreen(P: TPoint) : TPoint; overload;
+
+    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer }
+    property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
 
   published
     property    Color: Word read FColor write SetColor;
@@ -228,13 +231,11 @@ type
     function GetChildIndex(Index : integer): TView;
     procedure Insert(AChild:TView);
     procedure Remove(AChild:TView);
-    function GetBuffer: PVideoBuf;
     procedure ChildrenDrawView(Child: TComponent);
     procedure ChildrenDrawViewInClipRect(Child: TComponent);
     procedure ChildrenParentResize(Child: TComponent);
 
   protected
-    FBuffer: PVideoBuf;
     procedure Draw; override;
     procedure DrawClippedRect; virtual;
     property ClipRect : TRect read FClipRect write FClipRect;
@@ -243,7 +244,6 @@ type
   public
     function    ChildrenCount: integer;
     property Child[Index : integer] : TView read GetChildIndex;
-    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer }
     constructor Create(AOwner: TComponent); override;
     procedure DrawSubViews(R: TRect); overload;
     procedure DrawSubViews(); overload;
@@ -291,16 +291,16 @@ type
   end;
 
 
-  function GetScreenBufPos(x,y: integer ): Pointer;
-
 var
   EmptyRect : TRect;
 
 implementation
 
-function GetScreenBufPos(x,y: integer ): Pointer;
+function GetScreenBufPos(ABufferOwner : TView; x,y: integer ): Pointer;
 begin
-  result := VideoBuf;
+  result := ABufferOwner.Buffer; //usually is rootform.buffer
+  if result = nil then
+    result := VideoBuf;
   inc(result, (ScreenWidth * y + x) * SizeOf(TVideoCell) );
 end;
 
@@ -587,7 +587,7 @@ begin
     end;
 end;
 
-function TGroup.GetBuffer: PVideoBuf;
+function TView.GetBuffer: PVideoBuf;
 begin
   Result := FBuffer;
   if (Result = nil) and HasParent then
@@ -662,15 +662,6 @@ begin
     Designer.InvalidateRect(self.BoundsRect);
 end;
 
-(*procedure TView.Paint;
-{var
-  i : integer;}
-begin
-  {for i := 0 to Height -1 do
-    MoveCStr(GetScreenBufPos(FLeft,FTop+i)^, 'Test ~P~aint!', FColor);}
-  //MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, FColor);
-end;*)
-
 procedure TView.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
   BeginPainting;
@@ -679,8 +670,6 @@ begin
   EndPainting;
   Invalidate(True);
 end;
-
-//
 
 function TView.ConstraintWidth(NewWidth: Integer): Integer;
 begin
@@ -993,14 +982,12 @@ var
 begin
   if (h > 0) and (W > 0) then
   begin
-    //for i:=0 to h-1 do
-      //do_writeView(x,x+w,y+i,buf);
     R.TopLeft := ClientToScreen(X,Y);
     R.BottomRight := ClientToScreen(X+W-1, Y+H-1);
     R := RectIntersect(R, ScreenRect);
     with R do begin
       for J := Top to Bottom do
-        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
+        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Self, Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
     end;
     DrawScreenBuf(false);
   end;
@@ -1011,33 +998,14 @@ end;
 procedure TView.Draw;
 var B : TDrawBuffer;
 begin
-	  //MoveChar(B, '&', GetColor(1), Width);
-    MoveChar(B, ' ', Self.FColor, Width);
-	  WriteLine(0, 0, Width, Height, B);
+  MoveChar(B, ' ', Self.FColor, Width);
+  WriteLine(0, 0, Width, Height, B);
 end;
 
 procedure TView.DrawCursor;
 begin
   if State and sfFocused <> 0 then
     ResetCursor;   
-end;
-
-procedure TView.do_WriteView(x1, x2, y: Sw_Integer; var Buf);
-begin
-  {if (y>=0) and (y<Size.Y) then
-   begin
-     if x1<0 then
-      x1:=0;
-     if x2>Size.X then
-      x2:=Size.X;
-     if x1<x2 then
-      begin
-        staticVar2.offset:=x1;
-        staticVar2.y:=y;
-        staticVar1:=@Buf;
-        do_writeViewRec2( x1, x2, @Self, 0 );
-      end;
-   end;}
 end;
 
 procedure TView.ResetCursor;

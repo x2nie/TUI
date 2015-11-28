@@ -90,6 +90,9 @@ begin
   FormEditingHook.RegisterDesignerMediator(TTuirMediator);
 end;
 
+type
+  TtuiWindowAccess = class(TtuiWindow);
+
 { TTuirMediator }
 var
   FontWidth, FontHeight : Integer;
@@ -103,9 +106,39 @@ end;
 
 destructor TTuirMediator.Destroy;
 begin
-  if FMyForm<>nil then FMyForm.Designer:=nil;
+  if FMyForm<>nil then
+  begin
+    FMyForm.Designer:=nil;
+    if TtuiWindowAccess(FMyForm).FBuffer <> nil then
+       FreeMem(TtuiWindowAccess(FMyForm).FBuffer);
+  end;
   FMyForm:=nil;
   inherited Destroy;
+end;
+
+class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
+  ): TDesignerMediator;
+
+  function NewVideoBuf ():PVideoBuf;
+  var NewVideoBufSize : longint;
+  begin
+    NewVideoBufSize:=ScreenWidth*ScreenHeight*sizeof(TVideoCell);
+    GetMem(Result,NewVideoBufSize);
+  end;
+
+var
+  Mediator: TTuirMediator;
+begin
+  Result:=inherited CreateMediator(TheOwner,aForm);
+  Mediator:=TTuirMediator(Result);
+  Mediator.FMyForm:=aForm as TtuiWindow;
+  Mediator.FMyForm.Designer:=Mediator;
+  Mediator.FMyForm.Buffer:= NewVideoBuf();
+end;
+
+class function TTuirMediator.FormClass: TComponentClass;
+begin
+  Result:=TtuiWindow;
 end;
 
 procedure TTuirMediator.InvalidateRect(ConsoleRect: TRect);
@@ -171,22 +204,6 @@ begin
     if tab > -1 then
       TMyTabControl(c).ActivePage:= tab;
   end;}
-end;
-
-class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
-  ): TDesignerMediator;
-var
-  Mediator: TTuirMediator;
-begin
-  Result:=inherited CreateMediator(TheOwner,aForm);
-  Mediator:=TTuirMediator(Result);
-  Mediator.FMyForm:=aForm as TtuiWindow;
-  Mediator.FMyForm.Designer:=Mediator;
-end;
-
-class function TTuirMediator.FormClass: TComponentClass;
-begin
-  Result:=TtuiWindow;
 end;
 
 procedure TTuirMediator.GetBounds(AComponent: TComponent; out
@@ -297,7 +314,12 @@ procedure TTuirMediator.Paint;
     x,y,x1,y1 : Integer;
     s :   string;
     LastAtt : byte;
+    CurrentVideoBuf : PVideoBuf;
   begin
+    CurrentVideoBuf := FMyForm.Buffer;
+    if CurrentVideoBuf = nil then
+       CurrentVideoBuf := VideoBuf; //use global if not found
+
     with LCLForm do
     begin
     //try
@@ -340,7 +362,7 @@ procedure TTuirMediator.Paint;
         //BufP := Pointer(VideoBuf + (((y * ScreenWidth) + x) * SizeOf(TVideoCell)) );
         while x < Min(ScreenWidth, x1+self.FMyForm.Width)  do
         begin
-          BufP := PBuf(longint(VideoBuf) + (y * ScreenWidth + x) * SizeOf(TVideoCell) );
+          BufP := PBuf(longint(CurrentVideoBuf) + (y * ScreenWidth + x) * SizeOf(TVideoCell) );
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin
@@ -448,7 +470,7 @@ initialization
   ScreenWidth := 80;
   ScreenHeight:= 40;
 
-  AssignVideoBuf(0,0);//todo: make it per form, dont share VideoBuff for all
+  AssignVideoBuf(0,0);
 
 finalization
   FreeVideoBuf;

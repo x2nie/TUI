@@ -1,22 +1,22 @@
 object tuiWindow1: TtuiWindow1
   Color = 28266
-  Left = 40
-  Top = 7
-  Width = 82
-  Height = 47
+  Left = 0
+  Top = 1
+  Width = 100
+  Height = 37
   object tuiLabel1: TtuiLabel
     Color = 40095
-    Left = 20
-    Top = 2
+    Left = 15
+    Top = 4
     Width = 20
     Height = 16
     Text = '~tui~Label1'
   end
   object tuiLabel2: TtuiLabel
     Color = 23647
-    Left = 4
+    Left = 31
     Top = 6
-    Width = 10
+    Width = 13
     Height = 1
     Text = 'tuiLabel2'
   end
@@ -25,14 +25,22 @@ object tuiWindow1: TtuiWindow1
     Left = 15
     Top = 6
     Width = 13
-    Height = 4
+    Height = 2
     Text = 'tuiLabel3'
   end
   object Group1: TGroup
     Color = 23647
-    Left = 4
-    Top = 3
-    Width = 29
-    Height = 9
+    Left = 31
+    Top = 8
+    Width = 28
+    Height = 7
+    object tuiLabel4: TtuiLabel
+      Color = 11311
+      Left = 0
+      Top = 6
+      Width = 20
+      Height = 2
+      Text = 'tuiLabel4'
+    end
   end
 end

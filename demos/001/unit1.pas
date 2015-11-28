@@ -18,6 +18,7 @@ type
     tuiLabel1: TtuiLabel;
     tuiLabel2: TtuiLabel;
     tuiLabel3: TtuiLabel;
+    tuiLabel4: TtuiLabel;
   private
     { private declarations }
   public
