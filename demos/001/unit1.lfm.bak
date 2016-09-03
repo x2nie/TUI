@@ -1,7 +1,7 @@
 object tuiWindow1: TtuiWindow1
   Color = 28266
-  Left = 35
-  Top = 11
+  Left = 0
+  Top = 1
   Width = 100
   Height = 37
   object tuiLabel1: TtuiLabel

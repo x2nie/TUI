@@ -31,7 +31,7 @@
         <PackageName Value="Tuir_runtime"/>
       </Item1>
     </RequiredPackages>
-    <Units Count="3">
+    <Units Count="2">
       <Unit0>
         <Filename Value="tuiProject.lpr"/>
         <IsPartOfProject Value="True"/>
@@ -43,12 +43,6 @@
         <HasResources Value="True"/>
         <UnitName Value="Unit1"/>
       </Unit1>
-      <Unit2>
-        <Filename Value="unit2.pas"/>
-        <IsPartOfProject Value="True"/>
-        <ComponentName Value="tuiWindow2"/>
-        <UnitName Value="Unit2"/>
-      </Unit2>
     </Units>
   </ProjectOptions>
   <CompilerOptions>
