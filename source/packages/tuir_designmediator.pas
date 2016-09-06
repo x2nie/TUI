@@ -36,11 +36,17 @@ type
     //procedure GetClientArea(AComponent: TComponent; out
       //      CurClientArea: TRect; out ScrollOffset: TPoint); override;
     //procedure GetChildren(Proc: TGetChildProc; ARoot: TComponent); override;
+    function GetComponentOriginOnForm(AComponent: TComponent): TPoint; override;
+    procedure GetClientArea(AComponent: TComponent; out
+            CurClientArea: TRect; out ScrollOffset: TPoint); override;
+
     procedure Paint; override;
     function ComponentIsIcon(AComponent: TComponent): boolean; override;
     function ParentAcceptsChild(Parent: TComponent;
                 Child: TComponentClass): boolean; override;
-    procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+    //procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+    procedure SetFormBounds(RootComponent: TComponent; NewBounds, ClientRect: TRect); override;
+    procedure GetFormBounds(RootComponent: TComponent; out CurBounds, CurClientRect: TRect); override;
 
   public
     // needed by TView
@@ -90,6 +96,9 @@ begin
   FormEditingHook.RegisterDesignerMediator(TTuirMediator);
 end;
 
+type
+  TtuiWindowAccess = class(TtuiWindow);
+
 { TTuirMediator }
 var
   FontWidth, FontHeight : Integer;
@@ -103,9 +112,40 @@ end;
 
 destructor TTuirMediator.Destroy;
 begin
-  if FMyForm<>nil then FMyForm.Designer:=nil;
+  if FMyForm<>nil then
+  begin
+    FMyForm.Designer:=nil;
+    if TtuiWindowAccess(FMyForm).FBuffer <> nil then
+       FreeMem(TtuiWindowAccess(FMyForm).FBuffer);
+  end;
   FMyForm:=nil;
   inherited Destroy;
+end;
+
+class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
+  ): TDesignerMediator;
+
+  function NewVideoBuf ():PVideoBuf;
+  var NewVideoBufSize : longint;
+  begin
+    NewVideoBufSize:=ScreenWidth*ScreenHeight*sizeof(TVideoCell);
+    GetMem(Result,NewVideoBufSize);
+    fillchar(Result^, NewVideoBufSize, $FF);
+  end;
+
+var
+  Mediator: TTuirMediator;
+begin
+  Result:=inherited CreateMediator(TheOwner,aForm);
+  Mediator:=TTuirMediator(Result);
+  Mediator.FMyForm:=aForm as TtuiWindow;
+  Mediator.FMyForm.Designer:=Mediator;
+  Mediator.FMyForm.Buffer:= NewVideoBuf();
+end;
+
+class function TTuirMediator.FormClass: TComponentClass;
+begin
+  Result:=TtuiWindow;
 end;
 
 procedure TTuirMediator.InvalidateRect(ConsoleRect: TRect);
@@ -173,58 +213,35 @@ begin
   end;}
 end;
 
-class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
-  ): TDesignerMediator;
-var
-  Mediator: TTuirMediator;
-begin
-  Result:=inherited CreateMediator(TheOwner,aForm);
-  Mediator:=TTuirMediator(Result);
-  Mediator.FMyForm:=aForm as TtuiWindow;
-  Mediator.FMyForm.Designer:=Mediator;
-end;
-
-class function TTuirMediator.FormClass: TComponentClass;
-begin
-  Result:=TtuiWindow;
-end;
-
 procedure TTuirMediator.GetBounds(AComponent: TComponent; out
   CurBounds: TRect);
 var
-  w: TView;
+  c: TView;
+  l,t : Integer;
 begin
   if AComponent is TView then
   begin
-    w:=TView(AComponent);
+    {if AComponent = self.FMyForm then
+    begin
+      l :=0;
+      t :=0;
+    end
+    else
+    begin
+      l :=FMyForm.Left;
+      t :=FMyForm.Top;
+    end;}
+    l :=0;
+    t :=0;
+    c:=TView(AComponent);
     CurBounds:=Bounds(
-      w.Left * FontWidth,  w.Top * FontHeight,
-      w.Width * FontWidth, w.Height * FontHeight);
+      (l+ c.Left) * FontWidth,  (t+ c.Top) * FontHeight,
+      (l+ c.Width) * FontWidth, (t+ c.Height) * FontHeight);
   end else
     inherited GetBounds(AComponent,CurBounds);
 end;
 
-{procedure TTuirMediator.InvalidateRect(Sender: TObject; ARect: TRect;
-  Erase: boolean);
-begin
-  if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
-  LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
-end;}
 
-procedure TTuirMediator.GetObjInspNodeImageIndex(APersistent: TPersistent;
-  var AIndex: integer);
-begin
-  if Assigned(APersistent) then
-  begin
-    if (APersistent is TGroup) then
-      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexBox
-    else
-    if (APersistent is TView) then
-      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexControl
-    else
-      inherited;
-  end
-end;
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
 var w,h : integer;
@@ -250,6 +267,64 @@ begin //here the form created by ide.new() -> width=50,height=50
   else
     inherited SetBounds(AComponent,NewBounds);
   EndUpdate;
+end;
+
+{procedure TTuirMediator.InvalidateRect(Sender: TObject; ARect: TRect;
+  Erase: boolean);
+begin
+  if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
+  LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
+end;}
+
+procedure TTuirMediator.GetObjInspNodeImageIndex(APersistent: TPersistent;
+  var AIndex: integer);
+begin
+  if Assigned(APersistent) then
+  begin
+    if (APersistent is TGroup) then
+      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexBox
+    else
+    if (APersistent is TView) then
+      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexControl
+    else
+      inherited;
+  end
+end;
+
+
+function TTuirMediator.GetComponentOriginOnForm(AComponent: TComponent): TPoint;
+var
+  Parent: TComponent;
+  ClientArea: TRect;
+  ScrollOffset: TPoint;
+  CurBounds: TRect;
+begin
+  //default behavior = if parent = nil then result := (0,0)
+  // we need adjst it
+  {if AComponent = FMyForm then
+  begin
+    Result:=Point(0,0);
+    GetBounds(AComponent,CurBounds);
+    inc(Result.X,CurBounds.Left);
+    inc(Result.Y,CurBounds.Top);
+    {GetClientArea(Parent,ClientArea,ScrollOffset);
+    inc(Result.X,ClientArea.Left+ScrollOffset.X);
+    inc(Result.Y,ClientArea.Top+ScrollOffset.Y);}
+  end
+  else}
+    Result:=inherited GetComponentOriginOnForm(AComponent);
+end;
+
+procedure TTuirMediator.GetClientArea(AComponent: TComponent; out
+  CurClientArea: TRect; out ScrollOffset: TPoint);
+begin
+  if AComponent = FMyForm then begin
+    //Widget:=TMyWidget(AComponent);
+    with FMyForm do
+        CurClientArea := Rect(Left* FontWidth, Top* FontHeight, Width* FontWidth, Height* FontHeight);
+    ScrollOffset:=Point(0,0);
+  end else
+    inherited GetClientArea(AComponent, CurClientArea, ScrollOffset);
 end;
 
 {procedure TTuirMediator.GetChildren(Proc: TGetChildProc; ARoot: TComponent);
@@ -297,7 +372,12 @@ procedure TTuirMediator.Paint;
     x,y,x1,y1 : Integer;
     s :   string;
     LastAtt : byte;
+    CurrentVideoBuf : PVideoBuf;
   begin
+    CurrentVideoBuf := FMyForm.Buffer;
+    if CurrentVideoBuf = nil then
+       CurrentVideoBuf := VideoBuf; //use global if not found
+
     with LCLForm do
     begin
     //try
@@ -330,17 +410,21 @@ procedure TTuirMediator.Paint;
       x1 := FMyForm.Left;
       y1 := FMyForm.Top;
 
-      //but now we are in designtime
+      {//but now we are in designtime
       x1 := 0;
       y1 := 0;
+      }
 
+      // Y = 0..height
       for y := y1 to Pred( Min(ScreenHeight, y1+FMyForm.Height) ) do
       begin
         x := x1;
         //BufP := Pointer(VideoBuf + (((y * ScreenWidth) + x) * SizeOf(TVideoCell)) );
+
+        // X = 0..Width
         while x < Min(ScreenWidth, x1+self.FMyForm.Width)  do
         begin
-          BufP := PBuf(longint(VideoBuf) + (y * ScreenWidth + x) * SizeOf(TVideoCell) );
+          BufP := PBuf(longint(CurrentVideoBuf) + ((y-y1) * ScreenWidth + (x-x1) ) * SizeOf(TVideoCell) );
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin
@@ -348,7 +432,7 @@ procedure TTuirMediator.Paint;
             LastAtt := BufP^.Att;
           end;
           //if BufP^.S > #30 then
-            TextOut((x-x1) * FontWidth, (y-y1) * FontHeight, BufP^.S);
+            TextOut(x * FontWidth, y * FontHeight, BufP^.S);
 
           //inc(BufP, sizeof(TBuf));
           inc(x);
@@ -375,7 +459,27 @@ begin
   Result:=(Parent is TGroup) and Child.InheritsFrom(TView);
 end;
 
-procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
+procedure TTuirMediator.SetFormBounds(RootComponent: TComponent; NewBounds,
+  ClientRect: TRect);
+begin
+  with TtuiWindow(RootComponent) do
+  begin
+    DesktopBound := NewBounds;
+    DesktopClient := ClientRect;
+  end;
+end;
+
+procedure TTuirMediator.GetFormBounds(RootComponent: TComponent; out CurBounds,
+  CurClientRect: TRect);
+begin
+  with TtuiWindow(RootComponent) do
+  begin
+    CurBounds := DesktopBound;
+    CurClientRect := DesktopClient;
+  end;
+end;
+
+{procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
   NewBounds: TRect);
 begin
   if (AComponent is TView) and (NewParent <> nil)  then
@@ -389,7 +493,7 @@ begin
   end
   else
     inherited InitComponent(AComponent, NewParent, NewBounds);
-end;
+end;}
 
 //--- copied from video.inc because these are has no `interface`
 //    and we don't want to activate video nor driver
@@ -448,7 +552,7 @@ initialization
   ScreenWidth := 80;
   ScreenHeight:= 40;
 
-  AssignVideoBuf(0,0);//todo: make it per form, dont share VideoBuff for all
+  AssignVideoBuf(0,0);
 
 finalization
   FreeVideoBuf;

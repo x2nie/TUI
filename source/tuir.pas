@@ -117,6 +117,7 @@ type
   private
     FAnchors: TAnchors;
     FDesigner: ITUIRDesigner;
+    FParent: TGroup;
     //FParent: TView;
     function    ConstraintWidth(NewWidth: Integer): Integer;
     function    ConstraintHeight(NewHeight: Integer): Integer;
@@ -127,9 +128,11 @@ type
     function GetBoundsRect: TRect;
     procedure SetBoundsRect(const Value: TRect);
     //procedure SetParent(AValue: TView);
-    procedure do_WriteView(x1,x2,y:Sw_Integer; var Buf);
     procedure ResetCursor;
+    procedure SetParent(AValue: TGroup);
+    function GetBuffer: PVideoBuf;
   protected
+    FBuffer  : PVideoBuf;
     GrowMode : Byte;                             { View grow mode }
     Options  : Word;                             { View options masks }
     EventMask: Word;                             { View event masks }
@@ -167,8 +170,8 @@ type
     //FAcceptChildren : boolean;
     //FText:      string;
     //procedure   SetText(const AValue: string); virtual;
-    //procedure   SetParentComponent(Value: TComponent); override;
-    procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
+    procedure   SetParentComponent(Value: TComponent); override;
+    //procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
     //procedure   SetName(const NewName: TComponentName); override;
     //property    Text : string read FText write SetText;
     procedure DrawUnderView;
@@ -177,16 +180,16 @@ type
     procedure DrawCursor;
   public
     // requires by IDE Designer
-    function    ChildrenCount: integer;
+    //function    ChildrenCount: integer;
 
     function    GetParentComponent: TComponent; override;
     function    HasParent: Boolean; override;
-    function    GetParent: TGroup; //override;
+    //function    GetParent: TGroup; //override;
 
     //property    AcceptChildren : boolean read FAcceptChildren;
     //property    Children[Index: integer]: TView read GetControlChildren; //GetChildren has been reserved obove
     //property    Parent: TView read FParent write SetParent;
-    property    Parent   : TGroup read GetParent;
+    property    Parent   : TGroup read FParent write SetParent;
     property    Designer : ITUIRDesigner read GetDesigner write FDesigner;
   public
     ColourOfs: Sw_Integer;                          { View palette offset }
@@ -195,7 +198,6 @@ type
     //procedure Paint; virtual;      //internal paint
     procedure SetBounds(ALeft,ATop, AWidth, AHeight: Integer); virtual;
     procedure GetBounds(var R: TRect);
-    property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
     procedure DrawView; virtual;
     procedure ParentResized; virtual; //called by parent, to realign / anchoring
     function GetColor (Color: Word): Word;
@@ -203,6 +205,9 @@ type
     procedure WriteLine (X, Y, W, H: Sw_Integer; Var Buf);
     function ClientToScreen(X,Y: SW_Integer) : TPoint; overload;
     function ClientToScreen(P: TPoint) : TPoint; overload;
+
+    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer }
+    property BoundsRect: TRect read GetBoundsRect write SetBoundsRect;
 
   published
     property    Color: Word read FColor write SetColor;
@@ -222,19 +227,23 @@ type
   TGroup = class(TView)
   private
     FClipRect: TRect;
-    function GetBuffer: PVideoBuf;
+    FChildren : TFpList;
+    function GetChildIndex(Index : integer): TView;
+    procedure Insert(AChild:TView);
+    procedure Remove(AChild:TView);
     procedure ChildrenDrawView(Child: TComponent);
     procedure ChildrenDrawViewInClipRect(Child: TComponent);
     procedure ChildrenParentResize(Child: TComponent);
 
   protected
-    FBuffer: PVideoBuf;
     procedure Draw; override;
     procedure DrawClippedRect; virtual;
     property ClipRect : TRect read FClipRect write FClipRect;
     procedure   RealignChildren; override;
+    procedure   GetChildren(Proc: TGetChildProc; Root: TComponent); override;
   public
-    property Buffer : PVideoBuf read GetBuffer write FBuffer;                         { Screen Buffer } 
+    function    ChildrenCount: integer;
+    property Child[Index : integer] : TView read GetChildIndex;
     constructor Create(AOwner: TComponent); override;
     procedure DrawSubViews(R: TRect); overload;
     procedure DrawSubViews(); overload;
@@ -268,6 +277,18 @@ type
 
   TtuiWindow = class(TCustomWindow)
   private
+    FDesktopBound: TRect;
+    FDesktopClient: TRect;
+
+  protected
+    { needed by designer }
+    procedure DefineProperties(Filer: TFiler); override;
+    procedure ReadData(Stream: TStream);
+    procedure WriteData(Stream: TStream);
+  public
+    { needed by designer }
+    property DesktopBound : TRect read FDesktopBound write FDesktopBound;
+    property DesktopClient : TRect read FDesktopClient write FDesktopClient;
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -282,16 +303,16 @@ type
   end;
 
 
-  function GetScreenBufPos(x,y: integer ): Pointer;
-
 var
   EmptyRect : TRect;
 
 implementation
 
-function GetScreenBufPos(x,y: integer ): Pointer;
+function GetScreenBufPos(ABufferOwner : TView; x,y: integer ): Pointer;
 begin
-  result := VideoBuf;
+  result := ABufferOwner.Buffer; //usually is rootform.buffer
+  if result = nil then
+    result := VideoBuf;
   inc(result, (ScreenWidth * y + x) * SizeOf(TVideoCell) );
 end;
 
@@ -482,13 +503,16 @@ var
   R : TRect;
 begin
   if RectEquals(FClipRect, EmptyRect) then
-    R := BoundsRect
+  begin
+    R := BoundsRect;
+    RectMove(R, -Left, -Top); //clientrect
+  end
   else
     R := FClipRect;
 
   with R do begin
     //MoveChar(B, '&', GetColor(1), Width);
-    MoveChar(B, ' ', Self.FColor, Right-Left);
+    MoveChar(B, ' ', Self.FColor and $FF, Right-Left);
     WriteLine(Left, Top, Right-Left, Bottom-Top, B);
   end;
 
@@ -499,6 +523,28 @@ var t : Talignment;
 begin
   //inherited RealignChildren;
   GetChildren(@ChildrenParentResize,Self);
+end;
+
+procedure TGroup.GetChildren(Proc: TGetChildProc; Root: TComponent);
+var
+  i: Integer;
+begin
+  for i:=0 to ChildrenCount-1 do
+    //if Child[i].Owner=Root then
+      Proc(Child[i]);
+
+  if Root = self then
+    for i:=0 to ComponentCount-1 do
+      if Components[i].GetParentComponent = nil then
+        Proc(Components[i]);
+end;
+
+function TGroup.ChildrenCount: integer;
+begin
+  if FChildren = nil then
+     result :=0
+  else
+    result := FChildren.Count;
 end;
 
 procedure TGroup.DrawSubViews();
@@ -523,8 +569,37 @@ begin
 			- TGroup.Redraw}
 end;
 
+procedure TGroup.Insert(AChild: TView);
+begin
+  If not assigned(FChildren) then
+    FChildren:=TFpList.Create;
+  FChildren.Add(AChild);
+  AChild.FParent:=Self;
+end;
 
-function TGroup.GetBuffer: PVideoBuf;
+function TGroup.GetChildIndex(Index : integer): TView;
+begin
+  if FChildren = nil then
+     result := nil
+  else
+    result := TView(FChildren[Index]);
+end;
+
+procedure TGroup.Remove(AChild: TView);
+begin
+  AChild.FParent:=Nil;
+  If assigned(FChildren) then
+    begin
+    FChildren.Remove(AChild);
+    if FChildren.Count=0 then
+      begin
+      FChildren.Free;
+      FChildren:=Nil;
+      end;
+    end;
+end;
+
+function TView.GetBuffer: PVideoBuf;
 begin
   Result := FBuffer;
   if (Result = nil) and HasParent then
@@ -532,6 +607,27 @@ begin
 end;
 
 { TtuiWindow }
+
+procedure TtuiWindow.DefineProperties(Filer: TFiler);
+begin
+  inherited DefineProperties(Filer);
+  Filer.DefineBinaryProperty('DesktopBounds', @ReadData, @WriteData, True);
+
+end;
+
+procedure TtuiWindow.ReadData(Stream: TStream);
+begin
+  Stream.ReadBuffer( FDesktopBound , sizeOf(TRect));
+  Stream.ReadBuffer( FDesktopClient , sizeOf(TRect));
+
+end;
+
+procedure TtuiWindow.WriteData(Stream: TStream);
+begin
+  Stream.WriteBuffer(FDesktopBound , sizeOf(TRect));
+  Stream.WriteBuffer(FDesktopClient , sizeOf(TRect));
+
+end;
 
 constructor TtuiWindow.Create(AOwner: TComponent);
 begin
@@ -553,7 +649,8 @@ end;
 
 constructor TView.Create(AOwner: TComponent);
 begin
-  inherited;
+  inherited Create(AOwner);
+  //Parent := AOwner;
   FWidth  := 10;
   FHeight := 1;
   FMaxWidth  := 0;
@@ -598,15 +695,6 @@ begin
     Designer.InvalidateRect(self.BoundsRect);
 end;
 
-(*procedure TView.Paint;
-{var
-  i : integer;}
-begin
-  {for i := 0 to Height -1 do
-    MoveCStr(GetScreenBufPos(FLeft,FTop+i)^, 'Test ~P~aint!', FColor);}
-  //MoveCStr(GetScreenBufPos(FLeft,FTop)^, FText, FColor);
-end;*)
-
 procedure TView.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
 begin
   BeginPainting;
@@ -615,8 +703,6 @@ begin
   EndPainting;
   Invalidate(True);
 end;
-
-//
 
 function TView.ConstraintWidth(NewWidth: Integer): Integer;
 begin
@@ -638,7 +724,7 @@ end;
 
 function TView.GetDesigner: ITUIRDesigner;
 begin
-  if Owner <> nil then
+   if Parent <> nil then
      result := Parent.Designer
   else
     result := FDesigner;
@@ -738,13 +824,18 @@ begin
 
 end;
 
-function TView.ChildrenCount: integer;
+procedure TView.SetParentComponent(Value: TComponent);
 begin
-  result := ComponentCount
+  SetParent(TGroup(Value));
 end;
 
+{function TView.ChildrenCount: integer;
+begin
+  result := ComponentCount
+end;}
+
                                                                           
-procedure TView.GetChildren(Proc: TGetChildProc; Root: TComponent);
+(*procedure TView.GetChildren(Proc: TGetChildProc; Root: TComponent);
 var
   i: Integer;
   OwnedComponent: TComponent;
@@ -759,22 +850,22 @@ begin
       OwnedComponent := Components[I];
       if OwnedComponent is TView then Proc(OwnedComponent);
     end;
-end;
+end;*)
 
 function TView.GetParentComponent: TComponent;
 begin
-  Result:= Owner;
+  Result:= Parent;
 end;
 
 function TView.HasParent: Boolean;
 begin
-  Result:= Owner <> nil;
+  Result:= Parent <> nil;
 end;
 
-function TView.GetParent: TGroup;
+{function TView.GetParent: TGroup;
 begin
   result := TGroup(Owner)
-end;
+end;}
 
 
 
@@ -924,14 +1015,12 @@ var
 begin
   if (h > 0) and (W > 0) then
   begin
-    //for i:=0 to h-1 do
-      //do_writeView(x,x+w,y+i,buf);
     R.TopLeft := ClientToScreen(X,Y);
     R.BottomRight := ClientToScreen(X+W-1, Y+H-1);
     R := RectIntersect(R, ScreenRect);
     with R do begin
       for J := Top to Bottom do
-        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
+        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Self, Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
     end;
     DrawScreenBuf(false);
   end;
@@ -942,9 +1031,8 @@ end;
 procedure TView.Draw;
 var B : TDrawBuffer;
 begin
-	  //MoveChar(B, '&', GetColor(1), Width);
-    MoveChar(B, ' ', Self.FColor, Width);
-	  WriteLine(0, 0, Width, Height, B);
+  MoveChar(B, ' ', Self.FColor and $FF, Width);
+  WriteLine(0, 0, Width, Height, B);
 end;
 
 procedure TView.DrawCursor;
@@ -953,27 +1041,18 @@ begin
     ResetCursor;   
 end;
 
-procedure TView.do_WriteView(x1, x2, y: Sw_Integer; var Buf);
-begin
-  {if (y>=0) and (y<Size.Y) then
-   begin
-     if x1<0 then
-      x1:=0;
-     if x2>Size.X then
-      x2:=Size.X;
-     if x1<x2 then
-      begin
-        staticVar2.offset:=x1;
-        staticVar2.y:=y;
-        staticVar1:=@Buf;
-        do_writeViewRec2( x1, x2, @Self, 0 );
-      end;
-   end;}
-end;
-
 procedure TView.ResetCursor;
 begin
 
+end;
+
+procedure TView.SetParent(AValue: TGroup);
+begin
+  if FParent=AValue then Exit;
+  if FParent <> nil then
+     FParent.Remove(self);
+  if AValue <> nil then
+     AValue.Insert(self);
 end;
 
 function TView.ClientToScreen(X, Y: SW_Integer): TPoint;
