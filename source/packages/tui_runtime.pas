@@ -2,12 +2,13 @@
   This source is only used to compile and install the package.
  }
 
-unit TUI_runtime;
+unit tui_runtime;
 
+{$warn 5023 off : no warning about unused units}
 interface
 
 uses
-  TUI, TUI_Forms, TUI_Std;
+  TUI, TUI_widgets;
 
 implementation
 

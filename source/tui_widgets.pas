@@ -1,11 +1,11 @@
-unit Tuir_widgets;
+unit TUI_widgets;
 
 {$mode objfpc}{$H+}
 
 interface
 
 uses
-  Classes, SysUtils, Drivers, Tuir;
+  Classes, SysUtils, Drivers, tui;
 
 type
 

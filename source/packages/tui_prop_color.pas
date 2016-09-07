@@ -1,4 +1,4 @@
-unit tuir_prop_color;
+unit tui_prop_color;
 
 {$mode objfpc}{$H+}
 
@@ -60,7 +60,7 @@ var
 implementation
 
 uses
-  Tuir_designMediator;
+  Tui_designMediator;
 
 
 {$R *.lfm}

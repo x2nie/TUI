@@ -1,4 +1,4 @@
-unit TUI_Reg;
+unit tui_reg;
 
 interface
 
@@ -8,11 +8,13 @@ uses
 procedure Register;
 
 implementation
-uses PropEdits,TUI, TUI_Std  ;
+uses PropEdits,tui_prop_color, tui, TUI_widgets;
 
 procedure Register;
 begin
-  RegisterComponents('Standard',[TTUIControl,TTUILabel]);
+  RegisterComponents('Standard',[TGroup, TtuiLabel, TtuiFrame]);
+
+  RegisterPropertyEditor(TypeInfo(word), TView, 'Color', TTuiColorEditor);
 
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Caption', TStringMultilinePropertyEditor);
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Text', TStringMultilinePropertyEditor);

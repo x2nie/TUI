@@ -2,7 +2,7 @@
 <CONFIG>
   <Package Version="4">
     <PathDelim Value="\"/>
-    <Name Value="TUI_design"/>
+    <Name Value="tui_designtime"/>
     <Type Value="DesignTime"/>
     <Author Value="x2nie = Fathony Luthfillah"/>
     <CompilerOptions>
@@ -12,34 +12,58 @@
         <OtherUnitFiles Value="."/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Parsing>
+        <SyntaxOptions>
+          <IncludeAssertionCode Value="True"/>
+        </SyntaxOptions>
+      </Parsing>
+      <CodeGeneration>
+        <Checks>
+          <OverflowChecks Value="True"/>
+          <StackChecks Value="True"/>
+        </Checks>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf2Set"/>
+          <UseHeaptrc Value="True"/>
+          <TrashVariables Value="True"/>
+          <UseValgrind Value="True"/>
+        </Debugging>
+      </Linking>
     </CompilerOptions>
-    <Description Value="TUI Designer for Lazarus/FPC"/>
+    <Description Value="TUIR Designer for Lazarus/FPC"/>
     <License Value="GPL v2
 it uses/derives some part of Lazarus IDE/Designer, so it must be GPL"/>
-    <Version Minor="1"/>
-    <Files Count="3">
+    <Version Minor="3"/>
+    <Files Count="4">
       <Item1>
         <Filename Value="tui_reg.pas"/>
         <HasRegisterProc Value="True"/>
-        <UnitName Value="TUI_Reg"/>
+        <UnitName Value="tui_reg"/>
       </Item1>
       <Item2>
         <Filename Value="tui_designmediator.pas"/>
         <HasRegisterProc Value="True"/>
-        <UnitName Value="TUI_DesignMediator"/>
+        <UnitName Value="tui_designmediator"/>
       </Item2>
       <Item3>
         <Filename Value="tui_designdescriptor.pas"/>
         <HasRegisterProc Value="True"/>
         <UnitName Value="tui_designdescriptor"/>
       </Item3>
+      <Item4>
+        <Filename Value="tui_prop_color.pas"/>
+        <UnitName Value="tui_prop_color"/>
+      </Item4>
     </Files>
     <RequiredPkgs Count="3">
       <Item1>
-        <PackageName Value="IDEIntf"/>
+        <PackageName Value="tui_runtime"/>
+        <MaxVersion Minor="2"/>
       </Item1>
       <Item2>
-        <PackageName Value="TUI_runtime"/>
+        <PackageName Value="IDEIntf"/>
       </Item2>
       <Item3>
         <PackageName Value="FCL"/>

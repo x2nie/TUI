@@ -2,7 +2,7 @@
 <CONFIG>
   <Package Version="4">
     <PathDelim Value="\"/>
-    <Name Value="TUI_runtime"/>
+    <Name Value="tui_runtime"/>
     <Author Value="x2nie - Fathony Luthfilah"/>
     <CompilerOptions>
       <Version Value="11"/>
@@ -11,23 +11,37 @@
         <OtherUnitFiles Value=".."/>
         <UnitOutputDirectory Value="lib\$(TargetCPU)-$(TargetOS)"/>
       </SearchPaths>
+      <Parsing>
+        <SyntaxOptions>
+          <IncludeAssertionCode Value="True"/>
+        </SyntaxOptions>
+      </Parsing>
+      <CodeGeneration>
+        <Checks>
+          <OverflowChecks Value="True"/>
+        </Checks>
+      </CodeGeneration>
+      <Linking>
+        <Debugging>
+          <DebugInfoType Value="dsDwarf2"/>
+          <UseHeaptrc Value="True"/>
+          <TrashVariables Value="True"/>
+          <UseValgrind Value="True"/>
+        </Debugging>
+      </Linking>
     </CompilerOptions>
     <Description Value="Text User Interface for Lazarus/FPC"/>
     <License Value="LGPL 2.1"/>
-    <Version Minor="1"/>
-    <Files Count="3">
+    <Version Minor="3"/>
+    <Files Count="2">
       <Item1>
         <Filename Value="..\tui.pas"/>
-        <UnitName Value="TUI"/>
+        <UnitName Value="tui"/>
       </Item1>
       <Item2>
-        <Filename Value="..\tui_forms.pas"/>
-        <UnitName Value="tui_forms"/>
+        <Filename Value="..\tui_widgets.pas"/>
+        <UnitName Value="tui_widgets"/>
       </Item2>
-      <Item3>
-        <Filename Value="..\tui_std.pas"/>
-        <UnitName Value="tui_std"/>
-      </Item3>
     </Files>
     <RequiredPkgs Count="1">
       <Item1>

@@ -1,4 +1,4 @@
-unit TUI_DesignMediator;
+unit tui_designmediator;
 
 {$mode objfpc}{$H+}
 
@@ -6,20 +6,20 @@ interface
 
 uses
   LCLProc, LCLType, Classes, SysUtils, FormEditingIntf, LCLIntf, Controls, Graphics,
-  ProjectIntf, TUI, TUI_Forms;
+  ProjectIntf, tui;
 
 type
 
   { TTUIControlMediator }
 
-  { TTUIMediator }
+  { TTuirMediator }
 
-  TTUIMediator = class(TDesignerMediator,ITUIDesigner)
+  TTuirMediator = class(TDesignerMediator,ITUIRDesigner)
   private
-    FMyForm: TTUIForm;
+    FMyForm: TtuiWindow;
     FUpdateCount : integer;
     //ITUIDesigner
-    procedure InvalidateRect(Sender: TObject);
+    procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
     procedure BeginUpdate;
     procedure EndUpdate;
@@ -35,20 +35,54 @@ type
     procedure SetBounds(AComponent: TComponent; NewBounds: TRect); override;
     //procedure GetClientArea(AComponent: TComponent; out
       //      CurClientArea: TRect; out ScrollOffset: TPoint); override;
+    //procedure GetChildren(Proc: TGetChildProc; ARoot: TComponent); override;
+    function GetComponentOriginOnForm(AComponent: TComponent): TPoint; override;
+    procedure GetClientArea(AComponent: TComponent; out
+            CurClientArea: TRect; out ScrollOffset: TPoint); override;
+
     procedure Paint; override;
     function ComponentIsIcon(AComponent: TComponent): boolean; override;
     function ParentAcceptsChild(Parent: TComponent;
                 Child: TComponentClass): boolean; override;
+    //procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+    procedure SetFormBounds(RootComponent: TComponent; NewBounds, ClientRect: TRect); override;
+    procedure GetFormBounds(RootComponent: TComponent; out CurBounds, CurClientRect: TRect); override;
+
   public
-    // needed by TTUIControl
+    // needed by TView
     constructor Create(AOwner: TComponent); override;
     destructor Destroy; override;
     //procedure InvalidateRect(Sender: TObject; ARect: TRect; Erase: boolean);
-    property MyForm: TTUIForm read FMyForm;
+    property MyForm: TtuiWindow read FMyForm;
   public
     procedure GetObjInspNodeImageIndex(APersistent: TPersistent; var AIndex: integer); override;
   end;
 
+
+Const
+  TERMINAL_FONT_NAME = 'Terminal'; //it's Windows XP, what else?
+  TERMINAL_FONT_SIZE = 10;
+const
+  LCLColors : array[0..$F] of TColor = (
+    //lowres:
+    clBlack   ,
+    clNavy    ,
+    clGreen   ,
+    clTeal    ,
+    clMaroon  ,
+    clPurple  ,
+    clOlive   ,
+    clSilver  ,
+    //highres:
+    clGray    ,
+    $00FF5252 ,//clNavy    ,
+    clLime    ,
+    clAqua    ,
+    clRed     ,
+    clFuchsia ,
+    clYellow  ,
+    clWhite
+  );
 
 procedure Register;
 
@@ -59,58 +93,80 @@ uses
 
 procedure Register;
 begin
-  FormEditingHook.RegisterDesignerMediator(TTUIMediator);
+  FormEditingHook.RegisterDesignerMediator(TTuirMediator);
 end;
 
-{ TTUIMediator }
+type
+  TtuiWindowAccess = class(TtuiWindow);
+
+{ TTuirMediator }
 var
   FontWidth, FontHeight : Integer;
 
-const
-  LCLColors : array[0..$F] of TColor = (
-    //lowres:
-    clBlack   ,
-    clBlue    ,
-    clGreen   ,
-    clTeal    ,
-    clMaroon  ,
-    clPurple  ,
-    clOlive   ,
-    clSilver  ,
-    //highres:
-    clGray    ,
-    clNavy    ,
-    clLime    ,
-    clAqua    ,
-    clRed     ,
-    clFuchsia ,
-    clYellow  ,
-    clWhite
-  );
 
-constructor TTUIMediator.Create(AOwner: TComponent);
+
+constructor TTuirMediator.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
 end;
 
-destructor TTUIMediator.Destroy;
+destructor TTuirMediator.Destroy;
 begin
-  if FMyForm<>nil then FMyForm.Designer:=nil;
+  if FMyForm<>nil then
+  begin
+    FMyForm.Designer:=nil;
+    if TtuiWindowAccess(FMyForm).FBuffer <> nil then
+       FreeMem(TtuiWindowAccess(FMyForm).FBuffer);
+  end;
   FMyForm:=nil;
   inherited Destroy;
 end;
 
-procedure TTUIMediator.InvalidateRect(Sender: TObject);
+class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
+  ): TDesignerMediator;
+
+  function NewVideoBuf ():PVideoBuf;
+  var NewVideoBufSize : longint;
+  begin
+    NewVideoBufSize:=ScreenWidth*ScreenHeight*sizeof(TVideoCell);
+    GetMem(Result,NewVideoBufSize);
+    fillchar(Result^, NewVideoBufSize, $FF);
+  end;
+
+var
+  Mediator: TTuirMediator;
 begin
-  if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
-  //LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
+  Result:=inherited CreateMediator(TheOwner,aForm);
+  Mediator:=TTuirMediator(Result);
+  Mediator.FMyForm:=aForm as TtuiWindow;
+  Mediator.FMyForm.Designer:=Mediator;
+  Mediator.FMyForm.Buffer:= NewVideoBuf();
+  Mediator.FMyForm.Invalidate;
 end;
 
-procedure TTUIMediator.InvalidateBound(Sender: TObject);
+class function TTuirMediator.FormClass: TComponentClass;
+begin
+  Result:=TtuiWindow;
+end;
+
+procedure TTuirMediator.InvalidateRect(ConsoleRect: TRect);
+var R : TRect;
+begin
+  if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
+  with ConsoleRect do begin
+    R.Left  := Left * FontWidth;
+    R.Right := Right * FontWidth;
+    R.Top   := Top * FontHeight;
+    R.Bottom:= Bottom * FontHeight;
+  end;
+  LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
+end;
+
+procedure TTuirMediator.InvalidateBound(Sender: TObject);
 var R : TRect;
 begin
   if IsUpdating then exit;
-  if sender is TTUIForm then
+  if sender is TtuiWindow then
   begin
     //position
     GetBounds(TComponent(Sender), R);
@@ -123,22 +179,22 @@ begin
   end;
 end;
 
-procedure TTUIMediator.BeginUpdate;
+procedure TTuirMediator.BeginUpdate;
 begin
   inc(FUpdateCount);
 end;
 
-procedure TTUIMediator.EndUpdate;
+procedure TTuirMediator.EndUpdate;
 begin
   dec(FUpdateCount);
 end;
 
-function TTUIMediator.IsUpdating: boolean;
+function TTuirMediator.IsUpdating: boolean;
 begin
   result := FUpdateCount > 0;
 end;
 
-procedure TTUIMediator.MouseDown(Button: TMouseButton; Shift: TShiftState;
+procedure TTuirMediator.MouseDown(Button: TMouseButton; Shift: TShiftState;
   p: TPoint; var Handled: boolean);
 var
   c : TComponent;
@@ -146,7 +202,7 @@ var
   tab : integer;
 begin
   inherited MouseDown(Button, Shift, p, Handled);
-  c := ComponentAtPos(P,TTUIControl, [dmcapfOnlyVisible]);
+  c := ComponentAtPos(P,TView, [dmcapfOnlyVisible]);
   {if c is TMyTabControl then
   begin
     p2 := GetComponentOriginOnForm(c);
@@ -158,86 +214,138 @@ begin
   end;}
 end;
 
-class function TTUIMediator.CreateMediator(TheOwner, aForm: TComponent
-  ): TDesignerMediator;
-var
-  Mediator: TTUIMediator;
-begin
-  Result:=inherited CreateMediator(TheOwner,aForm);
-  Mediator:=TTUIMediator(Result);
-  Mediator.FMyForm:=aForm as TTUIForm;
-  Mediator.FMyForm.Designer:=Mediator;
-end;
-
-class function TTUIMediator.FormClass: TComponentClass;
-begin
-  Result:=TTUIForm;
-end;
-
-procedure TTUIMediator.GetBounds(AComponent: TComponent; out
+procedure TTuirMediator.GetBounds(AComponent: TComponent; out
   CurBounds: TRect);
 var
-  w: TTUIControl;
+  c: TView;
+  l,t : Integer;
 begin
-  if AComponent is TTUIControl then
+  if AComponent is TView then
   begin
-    w:=TTUIControl(AComponent);
+    {if AComponent = self.FMyForm then
+    begin
+      l :=0;
+      t :=0;
+    end
+    else
+    begin
+      l :=FMyForm.Left;
+      t :=FMyForm.Top;
+    end;}
+    l :=0;
+    t :=0;
+    c:=TView(AComponent);
     CurBounds:=Bounds(
-      w.Left * FontWidth,  w.Top * FontHeight,
-      w.Width * FontWidth, w.Height * FontHeight);
+      (l+ c.Left) * FontWidth,  (t+ c.Top) * FontHeight,
+      (l+ c.Width) * FontWidth, (t+ c.Height) * FontHeight);
   end else
     inherited GetBounds(AComponent,CurBounds);
 end;
 
-{procedure TTUIMediator.InvalidateRect(Sender: TObject; ARect: TRect;
-  Erase: boolean);
-begin
-  if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
-  LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
-end;}
 
-procedure TTUIMediator.GetObjInspNodeImageIndex(APersistent: TPersistent;
-  var AIndex: integer);
-begin
-  if Assigned(APersistent) then
-  begin
-    if (APersistent is TTUIControl) and (TTUIControl(APersistent).AcceptChildren) then
-      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexBox
-    else
-    if (APersistent is TTUIControl) then
-      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexControl
-    else
-      inherited;
-  end
-end;
 
-procedure TTUIMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
-var w,h : integer;
+procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
+var l,t,w,h : integer;
 begin //here the form created by ide.new() -> width=50,height=50
   BeginUpdate;
-  if AComponent is TTUIControl then begin
-    w := (NewBounds.Right-NewBounds.Left);// div FontWidth;
-    h := (NewBounds.Bottom-NewBounds.Top);// div FontHeight;
-    if (w=50) and (h=50) and (AComponent is TTUIForm) then
-    with TTUIControl(AComponent) do begin
+  if AComponent is TView then begin
+    w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
+    h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
+
+    if (w=50) and (h=50) and (AComponent is TtuiWindow) then
+    with TtuiWindow(AComponent) do begin
+      DesktopBound := NewBounds;
+      l := 0;
+      t := 0;
       w := Width;
       h := Height;
     end
     else
     begin
+      l := NewBounds.Left div FontWidth;
+      t := NewBounds.Top div FontHeight;
       w := w div FontWidth;
       h := h div FontHeight;
     end;
 
-    TTUIControl(AComponent).SetBounds(NewBounds.Left div FontWidth, NewBounds.Top div FontHeight,
-      w, h);
+    TView(AComponent).SetBounds(l,t,  w, h);
   end
   else
     inherited SetBounds(AComponent,NewBounds);
   EndUpdate;
 end;
 
-procedure TTUIMediator.Paint;
+{procedure TTuirMediator.InvalidateRect(Sender: TObject; ARect: TRect;
+  Erase: boolean);
+begin
+  if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
+  LCLIntf.InvalidateRect(LCLForm.Handle,@ARect,Erase);
+end;}
+
+procedure TTuirMediator.GetObjInspNodeImageIndex(APersistent: TPersistent;
+  var AIndex: integer);
+begin
+  if Assigned(APersistent) then
+  begin
+    if (APersistent is TGroup) then
+      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexBox
+    else
+    if (APersistent is TView) then
+      AIndex := FormEditingHook.GetCurrentObjectInspector.ComponentTree.ImgIndexControl
+    else
+      inherited;
+  end
+end;
+
+
+function TTuirMediator.GetComponentOriginOnForm(AComponent: TComponent): TPoint;
+var
+  Parent: TComponent;
+  ClientArea: TRect;
+  ScrollOffset: TPoint;
+  CurBounds: TRect;
+begin
+  //default behavior = if parent = nil then result := (0,0)
+  // we need adjst it
+  {if AComponent = FMyForm then
+  begin
+    Result:=Point(0,0);
+    GetBounds(AComponent,CurBounds);
+    inc(Result.X,CurBounds.Left);
+    inc(Result.Y,CurBounds.Top);
+    {GetClientArea(Parent,ClientArea,ScrollOffset);
+    inc(Result.X,ClientArea.Left+ScrollOffset.X);
+    inc(Result.Y,ClientArea.Top+ScrollOffset.Y);}
+  end
+  else}
+    Result:=inherited GetComponentOriginOnForm(AComponent);
+end;
+
+procedure TTuirMediator.GetClientArea(AComponent: TComponent; out
+  CurClientArea: TRect; out ScrollOffset: TPoint);
+begin
+  if AComponent = FMyForm then begin
+    //Widget:=TMyWidget(AComponent);
+    with FMyForm do
+        CurClientArea := Rect(Left* FontWidth, Top* FontHeight, Width* FontWidth, Height* FontHeight);
+    ScrollOffset:=Point(0,0);
+  end else
+    inherited GetClientArea(AComponent, CurClientArea, ScrollOffset);
+end;
+
+{procedure TTuirMediator.GetChildren(Proc: TGetChildProc; ARoot: TComponent);
+var
+  i: Integer;
+begin
+ inherited GetChildren(Proc, ARoot);
+
+  if ARoot = self.FMyForm then
+    for i:=0 to FMyForm.ComponentCount-1 do
+      //if FMyForm.Components[i].GetParentComponent = nil then
+        Proc(FMyForm.Components[i]);
+end; }
+
+procedure TTuirMediator.Paint;
 
   procedure PaintBuffer();
   // copy the VideoBuffer to LCLForm
@@ -254,11 +362,11 @@ procedure TTUIMediator.Paint;
     begin
       with LCLForm.Canvas do begin
         //background
-        c := Att and $F;
+        c := (Att and $F0) shr 4;
         Brush.Color := LCLColors[c];
 
         //text
-        c := (Att and $F0) shr 4;
+        c := Att and $F;
         Font.Color := LCLColors[c];
 
       end;
@@ -267,15 +375,20 @@ procedure TTUIMediator.Paint;
   var
     Buf : TBuf;
     BufP : PBuf;
-    x,y : Integer;
+    x,y,x1,y1 : Integer;
     s :   string;
     LastAtt : byte;
+    CurrentVideoBuf : PVideoBuf;
   begin
+    CurrentVideoBuf := FMyForm.Buffer;
+    if CurrentVideoBuf = nil then
+       CurrentVideoBuf := VideoBuf; //use global if not found
+
     with LCLForm do
     begin
     //try
-      Font.Size := 10;
-      Font.Name:='Terminal'; //it's Windows XP, what else?
+      Font.Size := TERMINAL_FONT_SIZE;
+      Font.Name:= TERMINAL_FONT_NAME;
     //except    end;
     end;
 
@@ -299,21 +412,32 @@ procedure TTUIMediator.Paint;
       LastAtt := Buf.Att;}
       LastAtt := $FE;
 
+      //we should offset the Window on BufferScreen into DesignerForm
+      x1 := FMyForm.Left;
+      y1 := FMyForm.Top;
 
-      for y := 0 to Pred( Min(ScreenHeight, FMyForm.Height) ) do
+      {//but now we are in designtime
+      x1 := 0;
+      y1 := 0;
+      }
+
+      // Y = 0..height
+      for y := y1 to Pred( Min(ScreenHeight, y1+FMyForm.Height) ) do
       begin
-        x := 0;
+        x := x1;
         //BufP := Pointer(VideoBuf + (((y * ScreenWidth) + x) * SizeOf(TVideoCell)) );
-        while x < Min(ScreenWidth, self.FMyForm.Width)  do
+
+        // X = 0..Width
+        while x < Min(ScreenWidth, x1+self.FMyForm.Width)  do
         begin
-          BufP := PBuf(longint(VideoBuf) + (y * ScreenWidth + x) * SizeOf(TVideoCell) );
+          BufP := PBuf(longint(CurrentVideoBuf) + ((y{-y1}) * ScreenWidth + (x{-x1}) ) * SizeOf(TVideoCell) );
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin
             ApplyColor(BufP^.Att);
             LastAtt := BufP^.Att;
           end;
-          if BufP^.S > #32 then
+          //if BufP^.S > #30 then
             TextOut(x * FontWidth, y * FontHeight, BufP^.S);
 
           //inc(BufP, sizeof(TBuf));
@@ -330,17 +454,52 @@ begin
   inherited Paint;
 end;
 
-function TTUIMediator.ComponentIsIcon(AComponent: TComponent): boolean;
+function TTuirMediator.ComponentIsIcon(AComponent: TComponent): boolean;
 begin
-  Result:=not (AComponent is TTUIControl);
+  Result:=not (AComponent is TView);
 end;
 
-function TTUIMediator.ParentAcceptsChild(Parent: TComponent;
+function TTuirMediator.ParentAcceptsChild(Parent: TComponent;
   Child: TComponentClass): boolean;
 begin
-  Result:=(Parent is TTUIControl) and (Child.InheritsFrom(TTUIControl))
-    and (TTUIControl(Parent).AcceptChildren);
+  Result:=(Parent is TGroup) and Child.InheritsFrom(TView);
 end;
+
+procedure TTuirMediator.SetFormBounds(RootComponent: TComponent; NewBounds,
+  ClientRect: TRect);
+begin
+  with TtuiWindow(RootComponent) do
+  begin
+    DesktopBound := NewBounds;
+    DesktopClient := ClientRect;
+  end;
+end;
+
+procedure TTuirMediator.GetFormBounds(RootComponent: TComponent; out CurBounds,
+  CurClientRect: TRect);
+begin
+  with TtuiWindow(RootComponent) do
+  begin
+    CurBounds := DesktopBound;
+    CurClientRect := DesktopClient;
+  end;
+end;
+
+{procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
+  NewBounds: TRect);
+begin
+  if (AComponent is TView) and (NewParent <> nil)  then
+  begin
+    if AComponent.Owner <> nil then
+      AComponent.Owner.RemoveComponent(AComponent);
+    //AComponent.Owner := nil;
+    if NewParent <> nil then
+      NewParent.InsertComponent(AComponent);
+
+  end
+  else
+    inherited InitComponent(AComponent, NewParent, NewBounds);
+end;}
 
 //--- copied from video.inc because these are has no `interface`
 //    and we don't want to activate video nor driver
@@ -399,7 +558,7 @@ initialization
   ScreenWidth := 80;
   ScreenHeight:= 40;
 
-  AssignVideoBuf(0,0);//todo: make it per form, dont share VideoBuff for all
+  AssignVideoBuf(0,0);
 
 finalization
   FreeVideoBuf;
