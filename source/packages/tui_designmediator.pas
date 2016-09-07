@@ -6,7 +6,7 @@ interface
 
 uses
   LCLProc, LCLType, Classes, SysUtils, FormEditingIntf, LCLIntf, Controls, Graphics,
-  ProjectIntf, tui;
+  ProjectIntf, Forms, tui;
 
 type
 
@@ -18,6 +18,7 @@ type
   private
     FMyForm: TtuiWindow;
     FUpdateCount : integer;
+    //FInitLclFormBound:TRect;
     //ITUIDesigner
     procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
@@ -44,7 +45,8 @@ type
     function ComponentIsIcon(AComponent: TComponent): boolean; override;
     function ParentAcceptsChild(Parent: TComponent;
                 Child: TComponentClass): boolean; override;
-    //procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+    procedure InitComponent(AComponent, NewParent: TComponent; NewBounds: TRect); override;
+    procedure SetLCLForm(const AValue: TForm); override;
     procedure SetFormBounds(RootComponent: TComponent; NewBounds, ClientRect: TRect); override;
     procedure GetFormBounds(RootComponent: TComponent; out CurBounds, CurClientRect: TRect); override;
 
@@ -139,9 +141,13 @@ begin
   Result:=inherited CreateMediator(TheOwner,aForm);
   Mediator:=TTuirMediator(Result);
   Mediator.FMyForm:=aForm as TtuiWindow;
-  Mediator.FMyForm.Designer:=Mediator;
-  Mediator.FMyForm.Buffer:= NewVideoBuf();
-  Mediator.FMyForm.Invalidate;
+  with Mediator.FMyForm do
+  begin
+    Designer:=Mediator;
+    Buffer:= NewVideoBuf();
+    SetBounds(0,0,Width, Height); //move left,top to zero. size unchanged.
+    Invalidate;
+  end;
 end;
 
 class function TTuirMediator.FormClass: TComponentClass;
@@ -243,6 +249,39 @@ begin
 end;
 
 
+procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
+  NewBounds: TRect);
+var R : TRect;
+begin
+  if (AComponent = self.FMyForm)  then
+  begin
+    //with NewBounds do LCLForm.SetBounds(Left,Top, Right, Bottom); //error because of nil
+    FMyForm.DesktopBound := NewBounds;
+    //FInitLclFormBound := NewBounds; //use later
+  end
+  else
+  if (AComponent is TView)  then
+  begin
+    self.GetBounds(AComponent, R); //get width,height in LCL coordinate world
+    R.TopLeft := NewBounds.TopLeft;
+    inherited InitComponent(AComponent, NewParent, R);
+  end
+  else
+    inherited InitComponent(AComponent, NewParent, NewBounds);
+end;
+
+procedure TTuirMediator.SetLCLForm(const AValue: TForm);
+var R : TRect;
+begin
+  inherited SetLCLForm(AValue);
+  if AValue <> nil then
+  begin
+    self.GetBounds(FMyForm, R); //get width,height in LCL coordinate world
+    R.TopLeft := FMyForm.DesktopBound.TopLeft;
+    with R do
+      AValue.SetBounds(Left,Top, Right, Bottom);
+  end;
+end;
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
 var l,t,w,h : integer;
@@ -253,12 +292,17 @@ begin //here the form created by ide.new() -> width=50,height=50
     h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
 
     if (w=50) and (h=50) and (AComponent is TtuiWindow) then
-    with TtuiWindow(AComponent) do begin
-      DesktopBound := NewBounds;
-      l := 0;
-      t := 0;
-      w := Width;
-      h := Height;
+    begin
+      with TtuiWindow(AComponent) do
+      begin
+        DesktopBound := NewBounds;
+        l := 0;
+        t := 0;
+        w := Width;
+        h := Height;
+      end;
+      with NewBounds do
+        LCLForm.SetBounds(Left,Top, Right, Bottom);
     end
     else
     begin
@@ -266,9 +310,9 @@ begin //here the form created by ide.new() -> width=50,height=50
       t := NewBounds.Top div FontHeight;
       w := w div FontWidth;
       h := h div FontHeight;
+      TView(AComponent).SetBounds(l,t,  w, h);
     end;
 
-    TView(AComponent).SetBounds(l,t,  w, h);
   end
   else
     inherited SetBounds(AComponent,NewBounds);
@@ -445,6 +489,7 @@ procedure TTuirMediator.Paint;
         end;
       end; //for y
 
+      Line(ScreenWidth* FontWidth, 0, ScreenWidth* FontWidth, LCLForm.Height);
     end; //with lclcanvas
   end;
 
@@ -485,21 +530,7 @@ begin
   end;
 end;
 
-{procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
-  NewBounds: TRect);
-begin
-  if (AComponent is TView) and (NewParent <> nil)  then
-  begin
-    if AComponent.Owner <> nil then
-      AComponent.Owner.RemoveComponent(AComponent);
-    //AComponent.Owner := nil;
-    if NewParent <> nil then
-      NewParent.InsertComponent(AComponent);
 
-  end
-  else
-    inherited InitComponent(AComponent, NewParent, NewBounds);
-end;}
 
 //--- copied from video.inc because these are has no `interface`
 //    and we don't want to activate video nor driver
