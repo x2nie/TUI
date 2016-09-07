@@ -144,7 +144,8 @@ begin
   with Mediator.FMyForm do
   begin
     Designer:=Mediator;
-    Buffer:= NewVideoBuf();
+    if Buffer = nil then
+      Buffer:= NewVideoBuf();
     SetBounds(0,0,Width, Height); //move left,top to zero. size unchanged.
     Invalidate;
   end;

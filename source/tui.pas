@@ -194,6 +194,7 @@ type
   public
     ColourOfs: Sw_Integer;                          { View palette offset }
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy;override;
     procedure Invalidate(RefreshParent: Boolean = False); virtual; //also tell the designer
     //procedure Paint; virtual;      //internal paint
     procedure SetBounds(ALeft,ATop, AWidth, AHeight: Integer); virtual;
@@ -662,6 +663,13 @@ begin
   //FChilds := TList.Create;
   FAnchors := [akLeft, akTop];
   FColor := $7c7f;//debug
+end;
+
+destructor TView.Destroy;
+begin
+  if FBUffer <> nil then
+    FreeMem(FBuffer);
+  inherited Destroy;
 end;
 
 
