@@ -1,0 +1,190 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CONFIG>
+  <ProjectSession>
+    <PathDelim Value="\"/>
+    <Version Value="9"/>
+    <BuildModes Active="Default"/>
+    <Units Count="19">
+      <Unit0>
+        <Filename Value="tuiProject.lpr"/>
+        <IsPartOfProject Value="True"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="1"/>
+        <UsageCount Value="45"/>
+        <Loaded Value="True"/>
+      </Unit0>
+      <Unit1>
+        <Filename Value="unit1.pas"/>
+        <IsPartOfProject Value="True"/>
+        <ComponentName Value="tuiWindow1"/>
+        <HasResources Value="True"/>
+        <UnitName Value="Unit1"/>
+        <TopLine Value="10"/>
+        <CursorPos X="9" Y="31"/>
+        <UsageCount Value="45"/>
+        <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
+      </Unit1>
+      <Unit2>
+        <Filename Value="unit2.pas"/>
+        <ComponentName Value="tuiWindow2"/>
+        <UnitName Value="Unit2"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="44"/>
+      </Unit2>
+      <Unit3>
+        <Filename Value="..\..\source\tuir.pas"/>
+        <UnitName Value="Tuir"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="289"/>
+        <CursorPos X="13" Y="302"/>
+        <ExtraEditorCount Value="1"/>
+        <ExtraEditor1>
+          <EditorIndex Value="-1"/>
+          <WindowIndex Value="-1"/>
+          <TopLine Value="218"/>
+          <CursorPos Y="234"/>
+        </ExtraEditor1>
+        <UsageCount Value="22"/>
+        <Bookmarks Count="1">
+          <Item0 X="32" Y="990" ID="7"/>
+        </Bookmarks>
+      </Unit3>
+      <Unit4>
+        <Filename Value="..\..\..\LiteZarus\designer\noncontroldesigner.pas"/>
+        <UnitName Value="NonControlDesigner"/>
+        <EditorIndex Value="-1"/>
+        <UsageCount Value="22"/>
+      </Unit4>
+      <Unit5>
+        <Filename Value="..\..\..\LiteZarus\designer\customnonformdesigner.pas"/>
+        <UnitName Value="CustomNonFormDesigner"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="23"/>
+        <CursorPos X="3" Y="23"/>
+        <UsageCount Value="22"/>
+      </Unit5>
+      <Unit6>
+        <Filename Value="..\..\..\LiteZarus\components\ideintf\formeditingintf.pas"/>
+        <UnitName Value="FormEditingIntf"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="196"/>
+        <CursorPos X="64" Y="210"/>
+        <UsageCount Value="22"/>
+      </Unit6>
+      <Unit7>
+        <Filename Value="..\..\..\LiteZarus\ide\customformeditor.pp"/>
+        <UnitName Value="CustomFormEditor"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1330"/>
+        <CursorPos X="33" Y="1416"/>
+        <UsageCount Value="22"/>
+        <Bookmarks Count="1">
+          <Item0 X="18" Y="1239" ID="1"/>
+        </Bookmarks>
+      </Unit7>
+      <Unit8>
+        <Filename Value="..\..\source\packages\tuir_designmediator.pas"/>
+        <UnitName Value="Tuir_designMediator"/>
+        <EditorIndex Value="-1"/>
+        <WindowIndex Value="-1"/>
+        <TopLine Value="353"/>
+        <CursorPos X="5" Y="365"/>
+        <UsageCount Value="22"/>
+        <Bookmarks Count="2">
+          <Item0 Y="209" ID="9"/>
+          <Item1 Y="95" ID="8"/>
+        </Bookmarks>
+      </Unit8>
+      <Unit9>
+        <Filename Value="..\..\..\LiteZarus\components\synunihighlighter\synunidesigner.pas"/>
+        <UnitName Value="SynUniDesigner"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="88"/>
+        <CursorPos X="42" Y="104"/>
+        <UsageCount Value="22"/>
+      </Unit9>
+      <Unit10>
+        <Filename Value="..\..\..\LiteZarus\designer\designer.pp"/>
+        <UnitName Value="Designer"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="2268"/>
+        <CursorPos X="17" Y="2302"/>
+        <UsageCount Value="22"/>
+      </Unit10>
+      <Unit11>
+        <Filename Value="..\..\..\LiteZarus\ide\componentpalette.pas"/>
+        <UnitName Value="ComponentPalette"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="683"/>
+        <CursorPos X="35" Y="692"/>
+        <UsageCount Value="22"/>
+      </Unit11>
+      <Unit12>
+        <Filename Value="C:\FPC\2.6.4\source\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1671"/>
+        <CursorPos X="15" Y="1688"/>
+        <UsageCount Value="22"/>
+      </Unit12>
+      <Unit13>
+        <Filename Value="..\..\source\packages\tuir_reg.pas"/>
+        <UnitName Value="Tuir_reg"/>
+        <EditorIndex Value="-1"/>
+        <CursorPos X="42" Y="15"/>
+        <UsageCount Value="15"/>
+      </Unit13>
+      <Unit14>
+        <Filename Value="C:\FPC\2.6.4\source\rtl\objpas\classes\compon.inc"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="237"/>
+        <CursorPos X="3" Y="240"/>
+        <UsageCount Value="15"/>
+      </Unit14>
+      <Unit15>
+        <Filename Value="..\..\..\LiteZarus\ide\lazarusidestrconsts.pas"/>
+        <UnitName Value="LazarusIDEStrConsts"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="4786"/>
+        <CursorPos X="27" Y="4796"/>
+        <UsageCount Value="14"/>
+      </Unit15>
+      <Unit16>
+        <Filename Value="..\..\source\tuir_widgets.pas"/>
+        <UnitName Value="Tuir_widgets"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="43"/>
+        <CursorPos Y="53"/>
+        <UsageCount Value="10"/>
+      </Unit16>
+      <Unit17>
+        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
+        <UnitName Value="App"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="219"/>
+        <CursorPos X="20" Y="238"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit17>
+      <Unit18>
+        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\views.pas"/>
+        <UnitName Value="Views"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="2020"/>
+        <CursorPos X="4" Y="2026"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit18>
+    </Units>
+    <JumpHistory Count="2" HistoryIndex="1">
+      <Position1>
+        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
+        <Caret Line="788" Column="4" TopLine="783"/>
+      </Position1>
+      <Position2>
+        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
+        <Caret Line="780" Column="4" TopLine="775"/>
+      </Position2>
+    </JumpHistory>
+  </ProjectSession>
+</CONFIG>
