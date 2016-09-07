@@ -251,7 +251,7 @@ end;
 
 procedure TTuirMediator.InitComponent(AComponent, NewParent: TComponent;
   NewBounds: TRect);
-var R : TRect;
+var R : TRect; W,H : integer;
 begin
   if (AComponent = self.FMyForm)  then
   begin
@@ -263,7 +263,9 @@ begin
   if (AComponent is TView)  then
   begin
     self.GetBounds(AComponent, R); //get width,height in LCL coordinate world
-    R.TopLeft := NewBounds.TopLeft;
+    OffsetRect(R, -R.Left, -R.Top); //move to zero
+    OffsetRect(R, NewBounds.Left, NewBounds.Top);
+    //R.TopLeft := NewBounds.TopLeft;
     inherited InitComponent(AComponent, NewParent, R);
   end
   else
