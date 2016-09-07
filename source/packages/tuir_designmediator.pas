@@ -141,6 +141,7 @@ begin
   Mediator.FMyForm:=aForm as TtuiWindow;
   Mediator.FMyForm.Designer:=Mediator;
   Mediator.FMyForm.Buffer:= NewVideoBuf();
+  Mediator.FMyForm.Invalidate;
 end;
 
 class function TTuirMediator.FormClass: TComponentClass;
@@ -244,25 +245,30 @@ end;
 
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
-var w,h : integer;
+var l,t,w,h : integer;
 begin //here the form created by ide.new() -> width=50,height=50
   BeginUpdate;
   if AComponent is TView then begin
     w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
     h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
+
     if (w=50) and (h=50) and (AComponent is TtuiWindow) then
-    with TView(AComponent) do begin
+    with TtuiWindow(AComponent) do begin
+      DesktopBound := NewBounds;
+      l := 0;
+      t := 0;
       w := Width;
       h := Height;
     end
     else
     begin
+      l := NewBounds.Left div FontWidth;
+      t := NewBounds.Top div FontHeight;
       w := w div FontWidth;
       h := h div FontHeight;
     end;
 
-    TView(AComponent).SetBounds(NewBounds.Left div FontWidth, NewBounds.Top div FontHeight,
-      w, h);
+    TView(AComponent).SetBounds(l,t,  w, h);
   end
   else
     inherited SetBounds(AComponent,NewBounds);
@@ -424,7 +430,7 @@ procedure TTuirMediator.Paint;
         // X = 0..Width
         while x < Min(ScreenWidth, x1+self.FMyForm.Width)  do
         begin
-          BufP := PBuf(longint(CurrentVideoBuf) + ((y-y1) * ScreenWidth + (x-x1) ) * SizeOf(TVideoCell) );
+          BufP := PBuf(longint(CurrentVideoBuf) + ((y{-y1}) * ScreenWidth + (x{-x1}) ) * SizeOf(TVideoCell) );
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin

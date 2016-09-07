@@ -21,6 +21,8 @@ type
     constructor Create(AOwner: TComponent); override;
   published
     property Text : string read FText write SetText;
+    property Height default 1;
+    property Width default 8;
   end;
 
   { TtuiLabel }
@@ -50,7 +52,7 @@ begin
   //inherited Draw;
   MoveChar(B[0], ' ', Byte(Color), Width);          { Clear the buffer }
   MoveCStr(B[1], FText, Color);{ Transfer label text }
-  WriteLine(0, 0, Width, 1, B);                     { Write the text }
+  WriteLine(0, 0, Width, 1, B);                     { Write the text at self bound at screen }
 end;
 
 { TStaticText }
@@ -71,6 +73,8 @@ end;
 constructor TStaticText.Create(AOwner: TComponent);
 begin
   inherited Create(AOwner);
+  Height := 1;
+  Width := 8;
   Options := Options OR (ofPreProcess+ofPostProcess);{ Set pre/post process }
   EventMask := EventMask OR evBroadcast;             { Sees broadcast events }
 end;

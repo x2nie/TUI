@@ -198,7 +198,7 @@ type
     //procedure Paint; virtual;      //internal paint
     procedure SetBounds(ALeft,ATop, AWidth, AHeight: Integer); virtual;
     procedure GetBounds(var R: TRect);
-    procedure DrawView; virtual;
+    procedure DrawView;
     procedure ParentResized; virtual; //called by parent, to realign / anchoring
     function GetColor (Color: Word): Word;
     function GetPalette: PPalette; Virtual;
@@ -465,12 +465,16 @@ end;
 
 procedure TGroup.ChildrenDrawView(Child: TComponent);
 begin
-  TView(Child).DrawView;
+  if Child is TView then
+    TView(Child).DrawView;
 end;
 
 procedure TGroup.ChildrenDrawViewInClipRect(Child: TComponent);
 var cv : TView;
 begin
+  if not (Child is TView) then
+    exit;
+
   cv := TView(Child);
   if not IsRectIntersectEmpty(cv.BoundsRect, FClipRect) then
     cv.DrawView;
@@ -928,6 +932,9 @@ procedure TView.DrawView;
   // Primarily, it is called by 'Show' and is NOT called by 'Hide'
   //it's only here. no things such TGroup.DrawView 
 begin
+  if {Painting or} (csLoading in ComponentState) then
+    exit;
+
   //if Exposed then
    begin
      LockScreenUpdate; { don't update the screen yet }
@@ -1009,18 +1016,47 @@ end;
   so, both runtime and designtime should take care of
   what going on by this routine }
 procedure TView.WriteLine(X, Y, W, H: Sw_Integer; var Buf);
+{ x = buf.offset.x
+  y = buf.offset.y, first position of buffer to be drawn
+}
+  function ParentClipRect(A: TView; AtScreenRect:TRect): TRect;
+  var
+    PC : TRect;
+  begin
+    result := AtScreenRect;
+    if A.HasParent then
+    begin
+      with A.Parent do
+      begin
+        PC.TopLeft :=     ClientToScreen(0,0);
+        PC.BottomRight := ClientToScreen(Width-1, Height-1);
+      end;
+      result := RectIntersect(Result, PC);
+      result := ParentClipRect(A.Parent, result);
+    end;
+  end;
+
 var
-  J:Sw_integer;
-  R : TRect;
+  AnchorX,Skip, J:Sw_integer;
+  R : TRect; //self bound at screen
 begin
   if (h > 0) and (W > 0) then
   begin
-    R.TopLeft := ClientToScreen(X,Y);
+
+    R.TopLeft := ClientToScreen(X,Y);  // self contained. Maybe ofscreen or out of parent's clip
+    AnchorX := R.Left; //Target,Virtually.
     R.BottomRight := ClientToScreen(X+W-1, Y+H-1);
     R := RectIntersect(R, ScreenRect);
+
+    //if name = 'tuiLabel5' then //debug
+    R := ParentClipRect(self, R);
+    Skip := R.Left - AnchorX;
+
     with R do begin
+      //Writeln(self.ClassName,' > ', self.Name, ' Final OnScreen: ', format('%d,%d, %d,%d',[Left, Top, Right, Bottom]) );
+
       for J := Top to Bottom do
-        Move(PVideoBuf(@Buf)^, GetScreenBufPos(Self, Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
+        Move(PVideoBuf(@Buf + Skip*sizeof(TVideoCell))^, GetScreenBufPos(Self, Left,J)^, (Right-Left+1) * sizeof(TVideoCell));
     end;
     DrawScreenBuf(false);
   end;
@@ -1066,7 +1102,7 @@ begin
   L := X ;
   T := Y ;
 
-  if not ((self is TCustomWindow) and (Designer <> nil)) then // happen in root-designer-object
+  //if not ((self is TCustomWindow) and (Designer <> nil)) then // happen in root-designer-object
   begin
     inc(L, Left);
     inc(T, Top);
@@ -1079,8 +1115,8 @@ begin
     { this is the final last chance to write to buffer
       so, both runtime and designtime should take care of
       what going on by this line }
-    if ( LParent is TCustomWindow) and (Designer <> nil) then // happen in root-designer-object
-      break;
+    //if ( LParent is TCustomWindow) and (Designer <> nil) then // happen in root-designer-object
+    //  break;
 
     inc(L, LParent.Left);
     inc(T, LParent.Top);
@@ -1115,7 +1151,7 @@ end;
 
 function TView.Painting: Boolean;
 begin
-  result := FPaintPending > 0;
+  result := (csLoading in self.ComponentState) and (FPaintPending > 0);
 end;
 
 initialization
