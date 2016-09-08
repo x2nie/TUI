@@ -1,9 +1,12 @@
 object tuiWindow1: TtuiWindow1
   Color = 28266
-  Left = 35
-  Top = 11
+  Left = 5
+  Top = 5
   Width = 100
   Height = 37
+  DesktopBounds = {
+    41030000730000004E0600009D02000000000000000000000D0300002A020000
+  }
   object tuiLabel1: TtuiLabel
     Color = 40095
     Left = 15
@@ -17,7 +20,6 @@ object tuiWindow1: TtuiWindow1
     Left = 31
     Top = 6
     Width = 13
-    Height = 1
     Text = 'tuiLabel2'
   end
   object tuiLabel3: TtuiLabel

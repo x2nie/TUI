@@ -8,8 +8,8 @@
       <Unit0>
         <Filename Value="tuiProject.lpr"/>
         <IsPartOfProject Value="True"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="1"/>
+        <CursorPos X="11" Y="6"/>
         <UsageCount Value="45"/>
         <Loaded Value="True"/>
       </Unit0>
@@ -19,8 +19,8 @@
         <ComponentName Value="tuiWindow1"/>
         <HasResources Value="True"/>
         <UnitName Value="Unit1"/>
-        <TopLine Value="10"/>
-        <CursorPos X="9" Y="31"/>
+        <IsVisibleTab Value="True"/>
+        <CursorPos X="30" Y="10"/>
         <UsageCount Value="45"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
@@ -158,7 +158,7 @@
         <UsageCount Value="10"/>
       </Unit16>
       <Unit17>
-        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
+        <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\app.pas"/>
         <UnitName Value="App"/>
         <EditorIndex Value="2"/>
         <TopLine Value="219"/>
@@ -167,7 +167,7 @@
         <Loaded Value="True"/>
       </Unit17>
       <Unit18>
-        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\views.pas"/>
+        <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\views.pas"/>
         <UnitName Value="Views"/>
         <EditorIndex Value="3"/>
         <TopLine Value="2020"/>
@@ -176,7 +176,7 @@
         <Loaded Value="True"/>
       </Unit18>
     </Units>
-    <JumpHistory Count="2" HistoryIndex="1">
+    <JumpHistory Count="4" HistoryIndex="3">
       <Position1>
         <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
         <Caret Line="788" Column="4" TopLine="783"/>
@@ -185,6 +185,14 @@
         <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
         <Caret Line="780" Column="4" TopLine="775"/>
       </Position2>
+      <Position3>
+        <Filename Value="tuiProject.lpr"/>
+        <Caret Line="11" Column="22" TopLine="19"/>
+      </Position3>
+      <Position4>
+        <Filename Value="tuiProject.lpr"/>
+        <Caret Line="6" Column="11"/>
+      </Position4>
     </JumpHistory>
   </ProjectSession>
 </CONFIG>

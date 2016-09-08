@@ -3,7 +3,7 @@ program tuiProject;
 uses
     Objects,
   SysUtils, Video, Mouse, Drivers,
-  Tuir, Tuir_widgets, Unit1 
+  Tui, Tui_widgets, Unit1
   { you can add units after this };
 
 begin

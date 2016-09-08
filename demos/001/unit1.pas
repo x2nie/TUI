@@ -7,7 +7,7 @@ unit Unit1;
 interface
 
 uses
-  Classes, SysUtils, Tuir, Tuir_widgets;
+  Classes, SysUtils, Tui, Tui_widgets;
 
 type
 

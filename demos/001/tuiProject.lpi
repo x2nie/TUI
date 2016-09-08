@@ -28,7 +28,7 @@
     </RunParams>
     <RequiredPackages Count="1">
       <Item1>
-        <PackageName Value="Tuir_runtime"/>
+        <PackageName Value="tui_runtime"/>
       </Item1>
     </RequiredPackages>
     <Units Count="2">
