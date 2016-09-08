@@ -114,13 +114,13 @@ end;
 
 destructor TTuirMediator.Destroy;
 begin
-  if FMyForm<>nil then
+  {if FMyForm<>nil then
   begin
     FMyForm.Designer:=nil;
     if TtuiWindowAccess(FMyForm).FBuffer <> nil then
        FreeMem(TtuiWindowAccess(FMyForm).FBuffer);
   end;
-  FMyForm:=nil;
+  FMyForm:=nil;}
   inherited Destroy;
 end;
 
@@ -146,7 +146,7 @@ begin
     Designer:=Mediator;
     if Buffer = nil then
       Buffer:= NewVideoBuf();
-    SetBounds(0,0,Width, Height); //move left,top to zero. size unchanged.
+    //SetBounds(0,0,Width, Height); //move left,top to zero. size unchanged.
     Invalidate;
   end;
 end;
@@ -257,7 +257,17 @@ begin
   if (AComponent = self.FMyForm)  then
   begin
     //with NewBounds do LCLForm.SetBounds(Left,Top, Right, Bottom); //error because of nil
-    FMyForm.DesktopBound := NewBounds;
+    if EqualRect(FMyForm.DesktopBound, EmptyRect) then
+    begin
+      //Dec(NewBounds.Right, NewBounds.Left); //workaround Bounds() I think its a bug of lazarus
+      //Dec(NewBounds.Bottom, NewBounds.Top); //workaround Bounds() I think its a bug of lazarus
+      self.GetBounds(FMyForm, R); //get width,height in LCL coordinate world
+      OffsetRect(R, -R.Left, -R.Top); //move to zero
+      //NewBounds.BottomRight := R.BottomRight;
+      OffsetRect(R, NewBounds.Left, NewBounds.Top); //move to newbound pos
+
+      FMyForm.DesktopBound := R;
+    end;
     //FInitLclFormBound := NewBounds; //use later
   end
   else
@@ -279,10 +289,12 @@ begin
   inherited SetLCLForm(AValue);
   if AValue <> nil then
   begin
-    self.GetBounds(FMyForm, R); //get width,height in LCL coordinate world
+    //self.GetBounds(FMyForm, R); //get width,height in LCL coordinate world
     R.TopLeft := FMyForm.DesktopBound.TopLeft;
-    with R do
-      AValue.SetBounds(Left,Top, Right, Bottom);
+    R.BottomRight := FMyForm.DesktopBound.BottomRight; //debug
+    AValue.BoundsRect := R;
+    ///with R do
+      //AValue.SetBounds(Left,Top, Right, Bottom);
   end;
 end;
 
@@ -294,7 +306,7 @@ begin //here the form created by ide.new() -> width=50,height=50
     w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
     h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
 
-    if (w=50) and (h=50) and (AComponent is TtuiWindow) then
+    {if (w=50) and (h=50) and (AComponent is TtuiWindow) then
     begin
       with TtuiWindow(AComponent) do
       begin
@@ -307,7 +319,7 @@ begin //here the form created by ide.new() -> width=50,height=50
       with NewBounds do
         LCLForm.SetBounds(Left,Top, Right, Bottom);
     end
-    else
+    else}
     begin
       l := NewBounds.Left div FontWidth;
       t := NewBounds.Top div FontHeight;

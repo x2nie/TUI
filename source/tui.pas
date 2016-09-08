@@ -246,6 +246,7 @@ type
     function    ChildrenCount: integer;
     property Child[Index : integer] : TView read GetChildIndex;
     constructor Create(AOwner: TComponent); override;
+    destructor Destroy; override;
     procedure DrawSubViews(R: TRect); overload;
     procedure DrawSubViews(); overload;
 
@@ -611,6 +612,13 @@ begin
     Result := Parent.Buffer;
 end;
 
+destructor TGroup.Destroy;
+begin
+  If assigned(FChildren) then
+    FChildren.Free;
+  inherited;
+end;
+
 { TtuiWindow }
 
 procedure TtuiWindow.DefineProperties(Filer: TFiler);
@@ -911,7 +919,9 @@ begin
     R := RectUnion( R, oldBounds);
     Parent.DrawSubViews(R);//(NextView, LastView); //it seem as later calls DrawView also. So, DoShow call double DrawView. I guessing.
     //Owner^.GetExtent(Owner^.Clip); //reset to bounds
-  end;
+  end
+  else
+    DrawView();
 end;
 
 function TView.GetBoundsRect: TRect;
@@ -1159,7 +1169,7 @@ end;
 
 function TView.Painting: Boolean;
 begin
-  result := (csLoading in self.ComponentState) and (FPaintPending > 0);
+  result := (csLoading in self.ComponentState) or (FPaintPending > 0);
 end;
 
 initialization
