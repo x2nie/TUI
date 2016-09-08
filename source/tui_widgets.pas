@@ -33,7 +33,7 @@ type
     procedure Draw; override;
   end;
 
-  TLabel = class(TtuiLabel)
+  TtuiButton = class(TView)
 
   end;
 

@@ -18,15 +18,12 @@ type
   private
     FMyForm: TtuiWindow;
     FUpdateCount : integer;
-    //FInitLclFormBound:TRect;
-    //ITUIDesigner
     procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
     procedure BeginUpdate;
     procedure EndUpdate;
     function IsUpdating: boolean;
   public
-    procedure MouseDown({%H-}Button: TMouseButton; {%H-}Shift: TShiftState; {%H-}p: TPoint; var {%H-}Handled: boolean); override;
 
     // needed by the Lazarus form editor
     class function CreateMediator(TheOwner, aForm: TComponent): TDesignerMediator;
@@ -34,10 +31,6 @@ type
     class function FormClass: TComponentClass; override;
     procedure GetBounds(AComponent: TComponent; out CurBounds: TRect); override;
     procedure SetBounds(AComponent: TComponent; NewBounds: TRect); override;
-    //procedure GetClientArea(AComponent: TComponent; out
-      //      CurClientArea: TRect; out ScrollOffset: TPoint); override;
-    //procedure GetChildren(Proc: TGetChildProc; ARoot: TComponent); override;
-    function GetComponentOriginOnForm(AComponent: TComponent): TPoint; override;
     procedure GetClientArea(AComponent: TComponent; out
             CurClientArea: TRect; out ScrollOffset: TPoint); override;
 
@@ -51,10 +44,6 @@ type
     procedure GetFormBounds(RootComponent: TComponent; out CurBounds, CurClientRect: TRect); override;
 
   public
-    // needed by TView
-    constructor Create(AOwner: TComponent); override;
-    destructor Destroy; override;
-    //procedure InvalidateRect(Sender: TObject; ARect: TRect; Erase: boolean);
     property MyForm: TtuiWindow read FMyForm;
   public
     procedure GetObjInspNodeImageIndex(APersistent: TPersistent; var AIndex: integer); override;
@@ -106,24 +95,6 @@ var
   FontWidth, FontHeight : Integer;
 
 
-
-constructor TTuirMediator.Create(AOwner: TComponent);
-begin
-  inherited Create(AOwner);
-end;
-
-destructor TTuirMediator.Destroy;
-begin
-  {if FMyForm<>nil then
-  begin
-    FMyForm.Designer:=nil;
-    if TtuiWindowAccess(FMyForm).FBuffer <> nil then
-       FreeMem(TtuiWindowAccess(FMyForm).FBuffer);
-  end;
-  FMyForm:=nil;}
-  inherited Destroy;
-end;
-
 class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
   ): TDesignerMediator;
 
@@ -146,7 +117,6 @@ begin
     Designer:=Mediator;
     if Buffer = nil then
       Buffer:= NewVideoBuf();
-    //SetBounds(0,0,Width, Height); //move left,top to zero. size unchanged.
     Invalidate;
   end;
 end;
@@ -160,6 +130,7 @@ procedure TTuirMediator.InvalidateRect(ConsoleRect: TRect);
 var R : TRect;
 begin
   if (LCLForm=nil) or (not LCLForm.HandleAllocated) then exit;
+  //it's wrong:
   with ConsoleRect do begin
     R.Left  := Left * FontWidth;
     R.Right := Right * FontWidth;
@@ -170,19 +141,17 @@ begin
 end;
 
 procedure TTuirMediator.InvalidateBound(Sender: TObject);
-var R : TRect;
+var R : TRect; P : TPOint;
 begin
   if IsUpdating then exit;
-  if sender is TtuiWindow then
+  if sender is TView then
   begin
-    //position
-    GetBounds(TComponent(Sender), R);
-    LCLForm.SetBounds(R.Left, R.Top, LCLForm.Width, LCLForm.Height);
-    //size
+    P := self.GetComponentOriginOnForm(TView(Sender));
+    GetBounds(TView(Sender), R);
     OffsetRect(R, -R.Left, -R.Top);
-    //R.TopLeft := Point(0,0);
-    LCLForm.Width:= R.Right;
-    LCLForm.Height := R.Bottom;
+    OffsetRect(R, P.x, P.y);
+    LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
+
   end;
 end;
 
@@ -198,28 +167,9 @@ end;
 
 function TTuirMediator.IsUpdating: boolean;
 begin
-  result := FUpdateCount > 0;
+  result := (FUpdateCount > 0) or (LCLForm=nil) or (not LCLForm.HandleAllocated);
 end;
 
-procedure TTuirMediator.MouseDown(Button: TMouseButton; Shift: TShiftState;
-  p: TPoint; var Handled: boolean);
-var
-  c : TComponent;
-  p2 : TPoint;
-  tab : integer;
-begin
-  inherited MouseDown(Button, Shift, p, Handled);
-  c := ComponentAtPos(P,TView, [dmcapfOnlyVisible]);
-  {if c is TMyTabControl then
-  begin
-    p2 := GetComponentOriginOnForm(c);
-    dec(p.x, p2.x);
-    dec(p.y, p2.y);
-    tab := TMyTabControl(c).GetTabAt(p.x, p.y);
-    if tab > -1 then
-      TMyTabControl(c).ActivePage:= tab;
-  end;}
-end;
 
 procedure TTuirMediator.GetBounds(AComponent: TComponent; out
   CurBounds: TRect);
@@ -229,22 +179,10 @@ var
 begin
   if AComponent is TView then
   begin
-    {if AComponent = self.FMyForm then
-    begin
-      l :=0;
-      t :=0;
-    end
-    else
-    begin
-      l :=FMyForm.Left;
-      t :=FMyForm.Top;
-    end;}
-    l :=0;
-    t :=0;
     c:=TView(AComponent);
     CurBounds:=Bounds(
-      (l+ c.Left) * FontWidth,  (t+ c.Top) * FontHeight,
-      (l+ c.Width) * FontWidth, (t+ c.Height) * FontHeight);
+      c.Left * FontWidth,  c.Top * FontHeight,
+      c.Width * FontWidth, c.Height * FontHeight);
   end else
     inherited GetBounds(AComponent,CurBounds);
 end;
@@ -256,19 +194,14 @@ var R : TRect; W,H : integer;
 begin
   if (AComponent = self.FMyForm)  then
   begin
-    //with NewBounds do LCLForm.SetBounds(Left,Top, Right, Bottom); //error because of nil
     if EqualRect(FMyForm.DesktopBound, EmptyRect) then
     begin
-      //Dec(NewBounds.Right, NewBounds.Left); //workaround Bounds() I think its a bug of lazarus
-      //Dec(NewBounds.Bottom, NewBounds.Top); //workaround Bounds() I think its a bug of lazarus
       self.GetBounds(FMyForm, R); //get width,height in LCL coordinate world
       OffsetRect(R, -R.Left, -R.Top); //move to zero
-      //NewBounds.BottomRight := R.BottomRight;
       OffsetRect(R, NewBounds.Left, NewBounds.Top); //move to newbound pos
 
       FMyForm.DesktopBound := R;
     end;
-    //FInitLclFormBound := NewBounds; //use later
   end
   else
   if (AComponent is TView)  then
@@ -276,7 +209,6 @@ begin
     self.GetBounds(AComponent, R); //get width,height in LCL coordinate world
     OffsetRect(R, -R.Left, -R.Top); //move to zero
     OffsetRect(R, NewBounds.Left, NewBounds.Top);
-    //R.TopLeft := NewBounds.TopLeft;
     inherited InitComponent(AComponent, NewParent, R);
   end
   else
@@ -284,18 +216,10 @@ begin
 end;
 
 procedure TTuirMediator.SetLCLForm(const AValue: TForm);
-var R : TRect;
 begin
   inherited SetLCLForm(AValue);
   if AValue <> nil then
-  begin
-    //self.GetBounds(FMyForm, R); //get width,height in LCL coordinate world
-    R.TopLeft := FMyForm.DesktopBound.TopLeft;
-    R.BottomRight := FMyForm.DesktopBound.BottomRight; //debug
-    AValue.BoundsRect := R;
-    ///with R do
-      //AValue.SetBounds(Left,Top, Right, Bottom);
-  end;
+    AValue.BoundsRect := FMyForm.DesktopBound;
 end;
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
@@ -306,31 +230,15 @@ begin //here the form created by ide.new() -> width=50,height=50
     w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
     h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
 
-    {if (w=50) and (h=50) and (AComponent is TtuiWindow) then
-    begin
-      with TtuiWindow(AComponent) do
-      begin
-        DesktopBound := NewBounds;
-        l := 0;
-        t := 0;
-        w := Width;
-        h := Height;
-      end;
-      with NewBounds do
-        LCLForm.SetBounds(Left,Top, Right, Bottom);
-    end
-    else}
-    begin
-      l := NewBounds.Left div FontWidth;
-      t := NewBounds.Top div FontHeight;
-      w := w div FontWidth;
-      h := h div FontHeight;
-      TView(AComponent).SetBounds(l,t,  w, h);
-    end;
-
+    l := NewBounds.Left div FontWidth;
+    t := NewBounds.Top div FontHeight;
+    w := w div FontWidth;
+    h := h div FontHeight;
+    TView(AComponent).SetBounds(l,t,  w, h);
   end
   else
     inherited SetBounds(AComponent,NewBounds);
+
   EndUpdate;
 end;
 
@@ -357,29 +265,6 @@ begin
 end;
 
 
-function TTuirMediator.GetComponentOriginOnForm(AComponent: TComponent): TPoint;
-var
-  Parent: TComponent;
-  ClientArea: TRect;
-  ScrollOffset: TPoint;
-  CurBounds: TRect;
-begin
-  //default behavior = if parent = nil then result := (0,0)
-  // we need adjst it
-  {if AComponent = FMyForm then
-  begin
-    Result:=Point(0,0);
-    GetBounds(AComponent,CurBounds);
-    inc(Result.X,CurBounds.Left);
-    inc(Result.Y,CurBounds.Top);
-    {GetClientArea(Parent,ClientArea,ScrollOffset);
-    inc(Result.X,ClientArea.Left+ScrollOffset.X);
-    inc(Result.Y,ClientArea.Top+ScrollOffset.Y);}
-  end
-  else}
-    Result:=inherited GetComponentOriginOnForm(AComponent);
-end;
-
 procedure TTuirMediator.GetClientArea(AComponent: TComponent; out
   CurClientArea: TRect; out ScrollOffset: TPoint);
 begin
@@ -392,17 +277,6 @@ begin
     inherited GetClientArea(AComponent, CurClientArea, ScrollOffset);
 end;
 
-{procedure TTuirMediator.GetChildren(Proc: TGetChildProc; ARoot: TComponent);
-var
-  i: Integer;
-begin
- inherited GetChildren(Proc, ARoot);
-
-  if ARoot = self.FMyForm then
-    for i:=0 to FMyForm.ComponentCount-1 do
-      //if FMyForm.Components[i].GetParentComponent = nil then
-        Proc(FMyForm.Components[i]);
-end; }
 
 procedure TTuirMediator.Paint;
 

@@ -712,7 +712,8 @@ begin
     DrawView;
     
   if Designer <> nil then
-    Designer.InvalidateRect(self.BoundsRect);
+    //Designer.InvalidateRect(self.BoundsRect);
+    Designer.InvalidateBound(self);
 end;
 
 procedure TView.SetBounds(ALeft, ATop, AWidth, AHeight: Integer);
