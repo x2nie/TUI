@@ -19,6 +19,11 @@ type
     tuiLabel2: TtuiLabel;
     tuiLabel3: TtuiLabel;
     tuiLabel4: TtuiLabel;
+    tuiLabel5: TtuiLabel;
+    tuiLabel6: TtuiLabel;
+    tuiLabel7: TtuiLabel;
+    tuiLabel8: TtuiLabel;
+    tuiLabel9: TtuiLabel;
   private
     { private declarations }
   public

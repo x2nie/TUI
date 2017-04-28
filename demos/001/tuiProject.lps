@@ -4,13 +4,14 @@
     <PathDelim Value="\"/>
     <Version Value="9"/>
     <BuildModes Active="Default"/>
-    <Units Count="19">
+    <Units Count="31">
       <Unit0>
         <Filename Value="tuiProject.lpr"/>
         <IsPartOfProject Value="True"/>
-        <EditorIndex Value="1"/>
-        <CursorPos X="11" Y="6"/>
-        <UsageCount Value="45"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="5"/>
+        <CursorPos X="97" Y="13"/>
+        <UsageCount Value="54"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -19,9 +20,9 @@
         <ComponentName Value="tuiWindow1"/>
         <HasResources Value="True"/>
         <UnitName Value="Unit1"/>
-        <IsVisibleTab Value="True"/>
-        <CursorPos X="30" Y="10"/>
-        <UsageCount Value="45"/>
+        <TopLine Value="7"/>
+        <CursorPos X="22" Y="11"/>
+        <UsageCount Value="54"/>
         <Loaded Value="True"/>
         <LoadedDesigner Value="True"/>
       </Unit1>
@@ -160,39 +161,272 @@
       <Unit17>
         <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\app.pas"/>
         <UnitName Value="App"/>
-        <EditorIndex Value="2"/>
+        <EditorIndex Value="13"/>
         <TopLine Value="219"/>
         <CursorPos X="20" Y="238"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="15"/>
         <Loaded Value="True"/>
       </Unit17>
       <Unit18>
         <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\views.pas"/>
         <UnitName Value="Views"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="2020"/>
-        <CursorPos X="4" Y="2026"/>
-        <UsageCount Value="10"/>
+        <EditorIndex Value="14"/>
+        <TopLine Value="4365"/>
+        <CursorPos X="64" Y="4391"/>
+        <UsageCount Value="15"/>
         <Loaded Value="True"/>
       </Unit18>
+      <Unit19>
+        <Filename Value="C:\fpc\fpc-3.0.0rc2.source\fpc-3.0.0rc2\packages\fv\src\views.pas"/>
+        <UnitName Value="Views"/>
+        <EditorIndex Value="-1"/>
+        <TopLine Value="1747"/>
+        <CursorPos X="13" Y="1758"/>
+        <UsageCount Value="10"/>
+      </Unit19>
+      <Unit20>
+        <Filename Value="..\..\source\packages\tui_designmediator.pas"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="256"/>
+        <CursorPos X="43" Y="261"/>
+        <UsageCount Value="14"/>
+        <Loaded Value="True"/>
+      </Unit20>
+      <Unit21>
+        <Filename Value="C:\fpc\fpc-3.0.0\packages\rtl-console\src\inc\videoh.inc"/>
+        <EditorIndex Value="11"/>
+        <TopLine Value="111"/>
+        <CursorPos X="11" Y="134"/>
+        <UsageCount Value="14"/>
+        <Loaded Value="True"/>
+      </Unit21>
+      <Unit22>
+        <Filename Value="..\..\source\tui.pas"/>
+        <UnitName Value="TUI"/>
+        <EditorIndex Value="1"/>
+        <TopLine Value="694"/>
+        <CursorPos X="38" Y="701"/>
+        <UsageCount Value="14"/>
+        <Bookmarks Count="1">
+          <Item0 X="3" Y="1090" ID="9"/>
+        </Bookmarks>
+        <Loaded Value="True"/>
+      </Unit22>
+      <Unit23>
+        <Filename Value="C:\fpc\fpc-3.0.0\packages\rtl-console\src\inc\video.inc"/>
+        <EditorIndex Value="12"/>
+        <TopLine Value="181"/>
+        <CursorPos X="3" Y="184"/>
+        <UsageCount Value="14"/>
+        <Loaded Value="True"/>
+      </Unit23>
+      <Unit24>
+        <Filename Value="C:\lazarus_trunk\components\ideintf\formeditingintf.pas"/>
+        <UnitName Value="FormEditingIntf"/>
+        <EditorIndex Value="10"/>
+        <TopLine Value="670"/>
+        <CursorPos X="3" Y="672"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit24>
+      <Unit25>
+        <Filename Value="C:\lazarus_trunk\lcl\include\winapih.inc"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="17"/>
+        <CursorPos X="10" Y="39"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit25>
+      <Unit26>
+        <Filename Value="C:\lazarus_trunk\lcl\lcltype.pp"/>
+        <UnitName Value="LCLType"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="181"/>
+        <CursorPos X="10" Y="195"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit26>
+      <Unit27>
+        <Filename Value="C:\fpc\fpc-3.0.0\rtl\objpas\classes\classesh.inc"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="2101"/>
+        <CursorPos X="10" Y="2118"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit27>
+      <Unit28>
+        <Filename Value="C:\fpc\fpc-3.0.0\rtl\objpas\classes\classes.inc"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="1048"/>
+        <CursorPos X="3" Y="1055"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit28>
+      <Unit29>
+        <Filename Value="..\..\source\tui_widgets.pas"/>
+        <UnitName Value="TUI_widgets"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="49"/>
+        <CursorPos X="3" Y="52"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit29>
+      <Unit30>
+        <Filename Value="C:\lazarus_trunk\lcl\interfaces\win32\win32proc.pp"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="2"/>
+        <TopLine Value="982"/>
+        <CursorPos X="29" Y="997"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit30>
     </Units>
-    <JumpHistory Count="4" HistoryIndex="3">
+    <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
-        <Caret Line="788" Column="4" TopLine="783"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="961" TopLine="942"/>
       </Position1>
       <Position2>
-        <Filename Value="C:\FPC\2.6.4\source\packages\fv\src\app.pas"/>
-        <Caret Line="780" Column="4" TopLine="775"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="962" TopLine="942"/>
       </Position2>
       <Position3>
-        <Filename Value="tuiProject.lpr"/>
-        <Caret Line="11" Column="22" TopLine="19"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="323" TopLine="306"/>
       </Position3>
       <Position4>
-        <Filename Value="tuiProject.lpr"/>
-        <Caret Line="6" Column="11"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="325" TopLine="306"/>
       </Position4>
+      <Position5>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="327" TopLine="306"/>
+      </Position5>
+      <Position6>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="961" Column="21" TopLine="946"/>
+      </Position6>
+      <Position7>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="965" TopLine="946"/>
+      </Position7>
+      <Position8>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="714" TopLine="698"/>
+      </Position8>
+      <Position9>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="717" TopLine="698"/>
+      </Position9>
+      <Position10>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="841" TopLine="824"/>
+      </Position10>
+      <Position11>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="780" TopLine="762"/>
+      </Position11>
+      <Position12>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="650" TopLine="639"/>
+      </Position12>
+      <Position13>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="960" TopLine="943"/>
+      </Position13>
+      <Position14>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="961" TopLine="943"/>
+      </Position14>
+      <Position15>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="962" TopLine="943"/>
+      </Position15>
+      <Position16>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="963" TopLine="943"/>
+      </Position16>
+      <Position17>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="965" TopLine="943"/>
+      </Position17>
+      <Position18>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="926" TopLine="909"/>
+      </Position18>
+      <Position19>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="909" TopLine="892"/>
+      </Position19>
+      <Position20>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="703" TopLine="680"/>
+      </Position20>
+      <Position21>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="502" Column="16" TopLine="493"/>
+      </Position21>
+      <Position22>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="640" Column="18" TopLine="612"/>
+      </Position22>
+      <Position23>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="641" Column="18" TopLine="613"/>
+      </Position23>
+      <Position24>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="502" Column="16" TopLine="485"/>
+      </Position24>
+      <Position25>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="640" Column="18" TopLine="612"/>
+      </Position25>
+      <Position26>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="641" Column="18" TopLine="613"/>
+      </Position26>
+      <Position27>
+        <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\views.pas"/>
+        <Caret Line="860" Column="11" TopLine="344"/>
+      </Position27>
+      <Position28>
+        <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\views.pas"/>
+        <Caret Line="2211" Column="14" TopLine="2183"/>
+      </Position28>
+      <Position29>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="452" Column="41" TopLine="446"/>
+      </Position29>
+      <Position30>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="701" Column="38" TopLine="694"/>
+      </Position30>
     </JumpHistory>
   </ProjectSession>
+  <Debugging>
+    <BreakPoints Count="3">
+      <Item1>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="tuiProject.lpr"/>
+        <Line Value="30"/>
+      </Item1>
+      <Item2>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="..\..\source\tui_widgets.pas"/>
+        <Line Value="55"/>
+      </Item2>
+      <Item3>
+        <Kind Value="bpkSource"/>
+        <WatchScope Value="wpsLocal"/>
+        <WatchKind Value="wpkWrite"/>
+        <Source Value="..\..\source\tui.pas"/>
+        <Line Value="961"/>
+      </Item3>
+    </BreakPoints>
+  </Debugging>
 </CONFIG>

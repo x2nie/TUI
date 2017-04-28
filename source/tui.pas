@@ -697,7 +697,8 @@ begin
     if Designer <> nil then
     begin
       oldBounds := Bounds( FPrevLeft, FPrevTop, FPrevWidth, FPrevHeight);
-      Designer.InvalidateRect(oldBounds);
+      //Designer.InvalidateRect(oldBounds);
+      Designer.InvalidateBound(self);
     end;
 
     FSizeIsDirty := False;

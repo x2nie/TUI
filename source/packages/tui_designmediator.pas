@@ -18,6 +18,7 @@ type
   private
     FMyForm: TtuiWindow;
     FUpdateCount : integer;
+    FBmp : TBitmap;
     procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
     procedure BeginUpdate;
@@ -29,6 +30,7 @@ type
     class function CreateMediator(TheOwner, aForm: TComponent): TDesignerMediator;
       override;
     class function FormClass: TComponentClass; override;
+    destructor Destroy; override;
     procedure GetBounds(AComponent: TComponent; out CurBounds: TRect); override;
     procedure SetBounds(AComponent: TComponent; NewBounds: TRect); override;
     procedure GetClientArea(AComponent: TComponent; out
@@ -112,6 +114,7 @@ begin
   Result:=inherited CreateMediator(TheOwner,aForm);
   Mediator:=TTuirMediator(Result);
   Mediator.FMyForm:=aForm as TtuiWindow;
+  Mediator.FBmp := TBitmap.Create;
   with Mediator.FMyForm do
   begin
     Designer:=Mediator;
@@ -124,6 +127,12 @@ end;
 class function TTuirMediator.FormClass: TComponentClass;
 begin
   Result:=TtuiWindow;
+end;
+
+destructor TTuirMediator.Destroy;
+begin
+  FBmp.Free;
+  inherited Destroy;
 end;
 
 procedure TTuirMediator.InvalidateRect(ConsoleRect: TRect);
@@ -279,7 +288,7 @@ end;
 
 
 procedure TTuirMediator.Paint;
-
+var TheCanvas : TCanvas;
   procedure PaintBuffer();
   // copy the VideoBuffer to LCLForm
 
@@ -293,7 +302,7 @@ procedure TTuirMediator.Paint;
     procedure ApplyColor(Att:Byte);
     var c : Byte;
     begin
-      with LCLForm.Canvas do begin
+      with TheCanvas do begin
         //background
         c := (Att and $F0) shr 4;
         Brush.Color := LCLColors[c];
@@ -317,16 +326,20 @@ procedure TTuirMediator.Paint;
     if CurrentVideoBuf = nil then
        CurrentVideoBuf := VideoBuf; //use global if not found
 
-    with LCLForm do
+    {with LCLForm do
     begin
     //try
       Font.Size := TERMINAL_FONT_SIZE;
       Font.Name:= TERMINAL_FONT_NAME;
     //except    end;
-    end;
+    end;}
 
-    with LCLForm.Canvas do
+    TheCanvas := FBmp.Canvas;
+    with TheCanvas do
     begin
+      Font.Size := TERMINAL_FONT_SIZE;
+      Font.Name:= TERMINAL_FONT_NAME;
+
       Brush.Style:=bsSolid;
       with TextExtent('H') do begin
         FontWidth := cx;
@@ -355,7 +368,7 @@ procedure TTuirMediator.Paint;
       }
 
       // Y = 0..height
-      for y := y1 to Pred( Min(ScreenHeight, y1+FMyForm.Height) ) do
+      for y := y1 to Min(ScreenHeight-1, y1+FMyForm.Height-1 ) do
       begin
         x := x1;
         //BufP := Pointer(VideoBuf + (((y * ScreenWidth) + x) * SizeOf(TVideoCell)) );
@@ -379,7 +392,11 @@ procedure TTuirMediator.Paint;
       end; //for y
 
       Line(ScreenWidth* FontWidth, 0, ScreenWidth* FontWidth, LCLForm.Height);
-    end; //with lclcanvas
+      Line(0, ScreenHeight* FontWidth, ScreenWidth* FontWidth, ScreenHeight* FontWidth);
+    end; //with canvas
+
+    if TheCanvas <> LCLForm.Canvas then
+        BitBlt( LCLForm.Canvas.Handle, 0,0, min(FBmp.Width, LCLForm.ClientWidth), min(FBmp.Height, LCLForm.ClientHeight), FBmp.Canvas.Handle,0,0, SRCCOPY)
   end;
 
 begin
@@ -402,6 +419,8 @@ end;
 procedure TTuirMediator.SetFormBounds(RootComponent: TComponent; NewBounds,
   ClientRect: TRect);
 begin
+  with ClientRect do
+  FBmp.SetSize(right-left+1, bottom-Top+1);
   with TtuiWindow(RootComponent) do
   begin
     DesktopBound := NewBounds;
