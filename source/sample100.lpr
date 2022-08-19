@@ -1,6 +1,6 @@
 program  sample100;
 
-{$I platform.inc}
+{.$I platform.inc}
 
 USES
 {$IFDEF OS2PM}
@@ -88,12 +88,12 @@ begin
   inc(p, 40 *2);
   MoveCStr(p^, s, $5678);
   //readln;
-  with TTUIControl.Create(nil) do
+  {with TTUIControl.Create(nil) do
   begin
     Left := 20;
     Top := 2;
     Paint;
-  end;
+  end;}
   UpdateScreen(false);
   readln;
 end.
