@@ -20,3 +20,5 @@ Todo:
 * Crate design-time package that provides:
   * Form Designer that able using Lazarus's Object Inspector
   * wizard for `New Tui Application`
+
+![Preview Running](doc/2022-08-19_09-39.png)
