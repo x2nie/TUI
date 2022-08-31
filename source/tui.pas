@@ -280,7 +280,7 @@ type
   TtuiWindow = class(TCustomWindow)
   private
     FDesktopBound: TRect;
-    FDesktopClient: TRect;
+    FDesktopSize: TPoint;
 
   protected
     { needed by designer }
@@ -290,7 +290,7 @@ type
   public
     { needed by designer }
     property DesktopBound : TRect read FDesktopBound write FDesktopBound;
-    property DesktopClient : TRect read FDesktopClient write FDesktopClient;
+    property DesktopSize : TPoint read FDesktopSize write FDesktopSize;
 
   public
     constructor Create(AOwner: TComponent); override;
@@ -631,14 +631,14 @@ end;
 procedure TtuiWindow.ReadData(Stream: TStream);
 begin
   Stream.ReadBuffer( FDesktopBound , sizeOf(TRect));
-  Stream.ReadBuffer( FDesktopClient , sizeOf(TRect));
+  Stream.ReadBuffer( FDesktopSize , sizeOf(TPoint));
 
 end;
 
 procedure TtuiWindow.WriteData(Stream: TStream);
 begin
   Stream.WriteBuffer(FDesktopBound , sizeOf(TRect));
-  Stream.WriteBuffer(FDesktopClient , sizeOf(TRect));
+  Stream.WriteBuffer(FDesktopSize , sizeOf(TPoint));
 
 end;
 
@@ -658,6 +658,8 @@ begin
   inherited Create(AOwner);
   FWidth := 60;
   FHeight := 18;
+  FDesktopSize.X := Video.ScreenWidth;
+  FDesktopSize.Y := VIdeo.ScreenHeight;
 end;
 
 constructor TView.Create(AOwner: TComponent);

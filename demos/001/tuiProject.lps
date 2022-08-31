@@ -4,12 +4,13 @@
     <PathDelim Value="\"/>
     <Version Value="12"/>
     <BuildModes Active="Default"/>
-    <Units Count="31">
+    <Units Count="38">
       <Unit0>
         <Filename Value="tuiProject.lpr"/>
         <IsPartOfProject Value="True"/>
+        <TopLine Value="3"/>
         <CursorPos Y="30"/>
-        <UsageCount Value="55"/>
+        <UsageCount Value="95"/>
         <Loaded Value="True"/>
       </Unit0>
       <Unit1>
@@ -18,18 +19,18 @@
         <ComponentName Value="tuiWindow1"/>
         <HasResources Value="True"/>
         <UnitName Value="Unit1"/>
-        <EditorIndex Value="3"/>
-        <TopLine Value="6"/>
-        <CursorPos X="108" Y="24"/>
-        <UsageCount Value="55"/>
+        <EditorIndex Value="10"/>
+        <CursorPos X="55" Y="20"/>
+        <UsageCount Value="95"/>
         <Loaded Value="True"/>
+        <LoadedDesigner Value="True"/>
       </Unit1>
       <Unit2>
         <Filename Value="unit2.pas"/>
         <ComponentName Value="tuiWindow2"/>
         <UnitName Value="Unit2"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="44"/>
+        <UsageCount Value="40"/>
       </Unit2>
       <Unit3>
         <Filename Value="..\..\source\tuir.pas"/>
@@ -44,7 +45,7 @@
           <TopLine Value="218"/>
           <CursorPos Y="234"/>
         </ExtraEditor1>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
         <Bookmarks Count="1">
           <Item0 X="32" Y="990" ID="7"/>
         </Bookmarks>
@@ -53,7 +54,7 @@
         <Filename Value="..\..\..\LiteZarus\designer\noncontroldesigner.pas"/>
         <UnitName Value="NonControlDesigner"/>
         <EditorIndex Value="-1"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit4>
       <Unit5>
         <Filename Value="..\..\..\LiteZarus\designer\customnonformdesigner.pas"/>
@@ -61,7 +62,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="23"/>
         <CursorPos X="3" Y="23"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit5>
       <Unit6>
         <Filename Value="..\..\..\LiteZarus\components\ideintf\formeditingintf.pas"/>
@@ -69,7 +70,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="196"/>
         <CursorPos X="64" Y="210"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit6>
       <Unit7>
         <Filename Value="..\..\..\LiteZarus\ide\customformeditor.pp"/>
@@ -77,7 +78,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1330"/>
         <CursorPos X="33" Y="1416"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
         <Bookmarks Count="1">
           <Item0 X="18" Y="1239" ID="1"/>
         </Bookmarks>
@@ -89,7 +90,7 @@
         <WindowIndex Value="-1"/>
         <TopLine Value="353"/>
         <CursorPos X="5" Y="365"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
         <Bookmarks Count="2">
           <Item0 Y="209" ID="9"/>
           <Item1 Y="95" ID="8"/>
@@ -101,7 +102,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="88"/>
         <CursorPos X="42" Y="104"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit9>
       <Unit10>
         <Filename Value="..\..\..\LiteZarus\designer\designer.pp"/>
@@ -109,7 +110,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="2268"/>
         <CursorPos X="17" Y="2302"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit10>
       <Unit11>
         <Filename Value="..\..\..\LiteZarus\ide\componentpalette.pas"/>
@@ -117,28 +118,28 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="683"/>
         <CursorPos X="35" Y="692"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit11>
       <Unit12>
         <Filename Value="C:\FPC\2.6.4\source\rtl\objpas\classes\classesh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1671"/>
         <CursorPos X="15" Y="1688"/>
-        <UsageCount Value="22"/>
+        <UsageCount Value="18"/>
       </Unit12>
       <Unit13>
         <Filename Value="..\..\source\packages\tuir_reg.pas"/>
         <UnitName Value="Tuir_reg"/>
         <EditorIndex Value="-1"/>
         <CursorPos X="42" Y="15"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="11"/>
       </Unit13>
       <Unit14>
         <Filename Value="C:\FPC\2.6.4\source\rtl\objpas\classes\compon.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="237"/>
         <CursorPos X="3" Y="240"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="11"/>
       </Unit14>
       <Unit15>
         <Filename Value="..\..\..\LiteZarus\ide\lazarusidestrconsts.pas"/>
@@ -146,7 +147,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="4786"/>
         <CursorPos X="27" Y="4796"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="10"/>
       </Unit15>
       <Unit16>
         <Filename Value="..\..\source\tuir_widgets.pas"/>
@@ -154,7 +155,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="43"/>
         <CursorPos Y="53"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit16>
       <Unit17>
         <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\app.pas"/>
@@ -162,7 +163,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="219"/>
         <CursorPos X="20" Y="238"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="11"/>
       </Unit17>
       <Unit18>
         <Filename Value="C:\fpc\2.6.4\source\packages\fv\src\views.pas"/>
@@ -170,7 +171,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="4365"/>
         <CursorPos X="64" Y="4391"/>
-        <UsageCount Value="15"/>
+        <UsageCount Value="11"/>
       </Unit18>
       <Unit19>
         <Filename Value="C:\fpc\fpc-3.0.0rc2.source\fpc-3.0.0rc2\packages\fv\src\views.pas"/>
@@ -178,30 +179,31 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="1747"/>
         <CursorPos X="13" Y="1758"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit19>
       <Unit20>
         <Filename Value="..\..\source\packages\tui_designmediator.pas"/>
-        <EditorIndex Value="-1"/>
-        <WindowIndex Value="-1"/>
-        <TopLine Value="313"/>
-        <CursorPos X="43" Y="261"/>
-        <UsageCount Value="14"/>
+        <IsVisibleTab Value="True"/>
+        <EditorIndex Value="4"/>
+        <TopLine Value="256"/>
+        <CursorPos X="3" Y="148"/>
+        <UsageCount Value="20"/>
+        <Loaded Value="True"/>
       </Unit20>
       <Unit21>
         <Filename Value="C:\fpc\fpc-3.0.0\packages\rtl-console\src\inc\videoh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="111"/>
         <CursorPos X="11" Y="134"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="10"/>
       </Unit21>
       <Unit22>
         <Filename Value="..\..\source\tui.pas"/>
         <UnitName Value="TUI"/>
         <EditorIndex Value="1"/>
-        <TopLine Value="943"/>
-        <CursorPos Y="961"/>
-        <UsageCount Value="14"/>
+        <TopLine Value="73"/>
+        <CursorPos Y="1085"/>
+        <UsageCount Value="32"/>
         <Bookmarks Count="1">
           <Item0 X="3" Y="1090" ID="9"/>
         </Bookmarks>
@@ -212,7 +214,7 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="181"/>
         <CursorPos X="3" Y="184"/>
-        <UsageCount Value="14"/>
+        <UsageCount Value="10"/>
       </Unit23>
       <Unit24>
         <Filename Value="C:\lazarus_trunk\components\ideintf\formeditingintf.pas"/>
@@ -220,14 +222,14 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="670"/>
         <CursorPos X="3" Y="672"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit24>
       <Unit25>
         <Filename Value="C:\lazarus_trunk\lcl\include\winapih.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="17"/>
         <CursorPos X="10" Y="39"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit25>
       <Unit26>
         <Filename Value="C:\lazarus_trunk\lcl\lcltype.pp"/>
@@ -235,30 +237,29 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="181"/>
         <CursorPos X="10" Y="195"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit26>
       <Unit27>
         <Filename Value="C:\fpc\fpc-3.0.0\rtl\objpas\classes\classesh.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="2101"/>
         <CursorPos X="10" Y="2118"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit27>
       <Unit28>
         <Filename Value="C:\fpc\fpc-3.0.0\rtl\objpas\classes\classes.inc"/>
         <EditorIndex Value="-1"/>
         <TopLine Value="1048"/>
         <CursorPos X="3" Y="1055"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit28>
       <Unit29>
         <Filename Value="..\..\source\tui_widgets.pas"/>
         <UnitName Value="TUI_widgets"/>
-        <IsVisibleTab Value="True"/>
         <EditorIndex Value="2"/>
-        <TopLine Value="48"/>
-        <CursorPos X="95" Y="57"/>
-        <UsageCount Value="10"/>
+        <TopLine Value="8"/>
+        <CursorPos Y="56"/>
+        <UsageCount Value="28"/>
         <Loaded Value="True"/>
       </Unit29>
       <Unit30>
@@ -266,132 +267,194 @@
         <EditorIndex Value="-1"/>
         <TopLine Value="982"/>
         <CursorPos X="29" Y="997"/>
-        <UsageCount Value="10"/>
+        <UsageCount Value="6"/>
       </Unit30>
+      <Unit31>
+        <Filename Value="..\..\..\..\lazarus-github\lcl\graphics.pp"/>
+        <UnitName Value="Graphics"/>
+        <EditorIndex Value="8"/>
+        <TopLine Value="1127"/>
+        <CursorPos X="14" Y="1135"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit31>
+      <Unit32>
+        <Filename Value="..\..\..\..\..\..\fpcupdeluxe\fpcsrc\rtl\inc\typshrdh.inc"/>
+        <EditorIndex Value="9"/>
+        <TopLine Value="28"/>
+        <CursorPos X="3" Y="38"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit32>
+      <Unit33>
+        <Filename Value="..\..\..\..\lazarus-github\components\ideintf\formeditingintf.pas"/>
+        <UnitName Value="FormEditingIntf"/>
+        <EditorIndex Value="6"/>
+        <TopLine Value="135"/>
+        <CursorPos X="3" Y="135"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit33>
+      <Unit34>
+        <Filename Value="..\..\..\..\..\..\..\..\usr\share\fpcsrc\3.2.2\packages\fv\src\drivers.pas"/>
+        <UnitName Value="Drivers"/>
+        <EditorIndex Value="3"/>
+        <TopLine Value="943"/>
+        <CursorPos X="4" Y="949"/>
+        <UsageCount Value="18"/>
+        <Loaded Value="True"/>
+      </Unit34>
+      <Unit35>
+        <Filename Value="..\..\..\..\..\..\..\..\usr\share\lazarus\2.2.2\ide\lazarus.pp"/>
+        <UnitName Value="Lazarus"/>
+        <EditorIndex Value="7"/>
+        <TopLine Value="120"/>
+        <CursorPos Y="167"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit35>
+      <Unit36>
+        <Filename Value="..\..\..\..\..\..\..\..\usr\share\lazarus\2.2.2\components\ideintf\formeditingintf.pas"/>
+        <UnitName Value="FormEditingIntf"/>
+        <EditorIndex Value="5"/>
+        <TopLine Value="113"/>
+        <CursorPos X="3" Y="135"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit36>
+      <Unit37>
+        <Filename Value="..\..\..\..\..\..\..\..\usr\share\lazarus\2.2.2\examples\designnonlcl\mywidgetdesigner.pas"/>
+        <UnitName Value="MyWidgetDesigner"/>
+        <WindowIndex Value="1"/>
+        <TopLine Value="201"/>
+        <CursorPos X="3" Y="98"/>
+        <UsageCount Value="10"/>
+        <Loaded Value="True"/>
+      </Unit37>
     </Units>
     <Debugger>
       <Backend Value="{FB848601-5086-411A-B39F-C29231E8FFAD}"/>
     </Debugger>
     <JumpHistory Count="30" HistoryIndex="29">
       <Position1>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="962" TopLine="944"/>
       </Position1>
       <Position2>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\source\tui_widgets.pas"/>
+        <Caret Line="54" TopLine="29"/>
       </Position2>
       <Position3>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="962" TopLine="944"/>
       </Position3>
       <Position4>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\source\tui_widgets.pas"/>
+        <Caret Line="54" TopLine="29"/>
       </Position4>
       <Position5>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="962" TopLine="944"/>
       </Position5>
       <Position6>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\source\tui_widgets.pas"/>
+        <Caret Line="52" Column="26" TopLine="29"/>
       </Position6>
       <Position7>
         <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Caret Line="55" TopLine="29"/>
       </Position7>
       <Position8>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1064" TopLine="1050"/>
       </Position8>
       <Position9>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="1065" TopLine="1050"/>
       </Position9>
       <Position10>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1068" TopLine="1050"/>
       </Position10>
       <Position11>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="1069" TopLine="1050"/>
       </Position11>
       <Position12>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1070" TopLine="1050"/>
       </Position12>
       <Position13>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="1071" TopLine="1050"/>
       </Position13>
       <Position14>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1074" TopLine="1050"/>
       </Position14>
       <Position15>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="1075" TopLine="1050"/>
       </Position15>
       <Position16>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1080" TopLine="1052"/>
       </Position16>
       <Position17>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="1081" TopLine="1053"/>
       </Position17>
       <Position18>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1080" TopLine="1053"/>
       </Position18>
       <Position19>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\tui.pas"/>
+        <Caret Line="1083" TopLine="1055"/>
       </Position19>
       <Position20>
         <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Caret Line="1085" TopLine="1057"/>
       </Position20>
       <Position21>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="unit1.pas"/>
+        <Caret Line="19" Column="55"/>
       </Position21>
       <Position22>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\source\packages\tui_designmediator.pas"/>
+        <Caret Line="440" Column="35" TopLine="283"/>
       </Position22>
       <Position23>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\source\packages\tui_designmediator.pas"/>
+        <Caret Line="17" Column="3"/>
       </Position23>
       <Position24>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\..\..\lazarus-github\components\ideintf\formeditingintf.pas"/>
+        <Caret Line="173" Column="38" TopLine="148"/>
       </Position24>
       <Position25>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\..\..\lazarus-github\components\ideintf\formeditingintf.pas"/>
+        <Caret Line="800" Column="3" TopLine="639"/>
       </Position25>
       <Position26>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\..\..\lazarus-github\components\ideintf\formeditingintf.pas"/>
+        <Caret Line="135" Column="3" TopLine="135"/>
       </Position26>
       <Position27>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\..\..\..\..\..\..\usr\share\lazarus\2.2.2\ide\lazarus.pp"/>
+        <Caret Line="157" Column="122" TopLine="145"/>
       </Position27>
       <Position28>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\source\packages\tui_designmediator.pas"/>
+        <Caret Line="17" Column="3"/>
       </Position28>
       <Position29>
-        <Filename Value="..\..\source\tui_widgets.pas"/>
-        <Caret Line="55" TopLine="48"/>
+        <Filename Value="..\..\..\..\..\..\..\..\usr\share\lazarus\2.2.2\examples\designnonlcl\mywidgetdesigner.pas"/>
+        <Caret Line="63" Column="19" TopLine="37"/>
       </Position29>
       <Position30>
-        <Filename Value="..\..\source\tui.pas"/>
-        <Caret Line="961" TopLine="943"/>
+        <Filename Value="..\..\source\packages\tui_designmediator.pas"/>
+        <Caret Line="33" Column="28" TopLine="20"/>
       </Position30>
     </JumpHistory>
     <RunParams>
@@ -412,15 +475,15 @@
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
-        <Source Value="..\..\source\tui_widgets.pas"/>
-        <Line Value="55"/>
+        <Source Value="..\..\source\tui.pas"/>
+        <Line Value="961"/>
       </Item>
       <Item>
         <Kind Value="bpkSource"/>
         <WatchScope Value="wpsLocal"/>
         <WatchKind Value="wpkWrite"/>
-        <Source Value="..\..\source\tui.pas"/>
-        <Line Value="961"/>
+        <Source Value="..\..\source\tui_widgets.pas"/>
+        <Line Value="54"/>
       </Item>
     </BreakPoints>
   </Debugging>

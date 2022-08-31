@@ -99,22 +99,36 @@ var
 
 class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
   ): TDesignerMediator;
+var
+  Mediator: TTuirMediator;
 
   function NewVideoBuf ():PVideoBuf;
   var NewVideoBufSize : longint;
   begin
-    NewVideoBufSize:=ScreenWidth*ScreenHeight*sizeof(TVideoCell);
+    //NewVideoBufSize:=ScreenWidth*ScreenHeight*sizeof(TVideoCell);
+    NewVideoBufSize:=Mediator.FMyForm.DesktopSize.X * Mediator.FMyForm.DesktopSize.Y *sizeof(TVideoCell);
     GetMem(Result,NewVideoBufSize);
-    fillchar(Result^, NewVideoBufSize, $FF);
+    fillchar(Result^, NewVideoBufSize, $00);
   end;
 
-var
-  Mediator: TTuirMediator;
+
 begin
   Result:=inherited CreateMediator(TheOwner,aForm);
   Mediator:=TTuirMediator(Result);
   Mediator.FMyForm:=aForm as TtuiWindow;
   Mediator.FBmp := TBitmap.Create;
+  with Mediator.FBmp.Canvas do
+    begin
+      Font.Size := TERMINAL_FONT_SIZE;
+      Font.Name:= TERMINAL_FONT_NAME;
+
+      Brush.Style:=bsSolid;
+      with TextExtent('H') do begin
+        FontWidth := cx;
+        FontHeight := cy;
+      end;
+  end;
+
   with Mediator.FMyForm do
   begin
     Designer:=Mediator;
@@ -317,14 +331,15 @@ var TheCanvas : TCanvas;
   var
     Buf : TBuf;
     BufP : PBuf;
+    //CharH, CharW: Integer;
     x,y,x1,y1 : Integer;
     s :   string;
     LastAtt : byte;
     CurrentVideoBuf : PVideoBuf;
   begin
     CurrentVideoBuf := FMyForm.Buffer;
-    if CurrentVideoBuf = nil then
-       CurrentVideoBuf := VideoBuf; //use global if not found
+    //if CurrentVideoBuf = nil then
+      // CurrentVideoBuf := VideoBuf; //use global if not found
 
     {with LCLForm do
     begin
@@ -341,15 +356,18 @@ var TheCanvas : TCanvas;
       Font.Name:= TERMINAL_FONT_NAME;
 
       Brush.Style:=bsSolid;
-      with TextExtent('H') do begin
+      {with TextExtent('H') do begin
         FontWidth := cx;
         FontHeight := cy;
-      end;
+        CharW := cx;
+        CharH := cy;
+      end;}
 
       // fill background
       Brush.Style:=bsSolid;
       Brush.Color:= clLime;// clBlack;
-      Fillrect(LCLForm.ClientRect);
+      //Fillrect(LCLForm.ClientRect);
+      FillRect(Rect(0,0, FMyForm.DesktopSize.X * FontWidth, FMyForm.DesktopSize.Y * FontHeight));
       //exit;
 
       // first color
@@ -357,7 +375,7 @@ var TheCanvas : TCanvas;
       ApplyColor(Buf.Att);
       LastAtt := Buf.Att;}
       LastAtt := $FE;
-
+{
       //we should offset the Window on BufferScreen into DesignerForm
       x1 := FMyForm.Left;
       y1 := FMyForm.Top;
@@ -376,7 +394,7 @@ var TheCanvas : TCanvas;
         // X = 0..Width
         while x < Min(ScreenWidth, x1+self.FMyForm.Width)  do
         begin
-          BufP := PBuf(longint(CurrentVideoBuf) + ((y{-y1}) * ScreenWidth + (x{-x1}) ) * SizeOf(TVideoCell) );
+          BufP := PBuf(longint(CurrentVideoBuf) + ((y) * ScreenWidth + (x) ) * SizeOf(TVideoCell) );
           //inc(BufP, (y * ScreenWidth + x) * SizeOf(TVideoCell));
           if BufP^.Att <> LastAtt then
           begin
@@ -390,17 +408,59 @@ var TheCanvas : TCanvas;
           inc(x);
         end;
       end; //for y
+}
+      //we should offset the Window on BufferScreen into DesignerForm
+      x1 := FMyForm.Left;
+      y1 := FMyForm.Top;
 
-      Line(ScreenWidth* FontWidth, 0, ScreenWidth* FontWidth, LCLForm.Height);
-      Line(0, ScreenHeight* FontWidth, ScreenWidth* FontWidth, ScreenHeight* FontWidth);
+      for y := 0 to FMyForm.DesktopSize.y - 1 do
+      // Y = 0..height
+      //for y := y1 to Min(FMyForm.DesktopSize.y, y1+FMyForm.Height ) - 1 do
+      //for y := 0 to FMyForm.Height - 1 do
+      begin
+        for x := 0 to FMyForm.DesktopSize.x - 1 do
+        //for x := x1 to Min(FMyForm.DesktopSize.x, x1+FMyForm.Width ) - 1 do
+        //for x := 0 to FMyForm.Width - 1 do
+        begin
+          BufP := PBuf(Pointer(CurrentVideoBuf) + (
+            (
+              (y * FMyForm.DesktopSize.x)
+              + x
+            ) * SizeOf(TBuf) ));
+          if(ord(BUfP^.S)) < 32 then
+            continue;
+
+          if BufP^.Att <> LastAtt then
+          begin
+            ApplyColor(BufP^.Att);
+            LastAtt := BufP^.Att;
+          end;
+          //if BufP^.S > #30 then
+          //TextOut(x1 + x * FontWidth, y1 + y * FontHeight, BufP^.S);
+          TextOut( x * FontWidth,  y * FontHeight, BufP^.S);
+        end;
+      end;
+
+
+      Line(
+           FMyForm.DesktopSize.X * FontWidth, 0,
+           FMyForm.DesktopSize.x * FontWidth, LCLForm.Height);
+      Line(
+           0, FMyForm.DesktopSize.Y * FontHeight,
+           FMyForm.DesktopSize.X * FontWidth, FMyForm.DesktopSize.y* FontHeight);
     end; //with canvas
 
     if TheCanvas <> LCLForm.Canvas then
-        BitBlt( LCLForm.Canvas.Handle, 0,0, min(FBmp.Width, LCLForm.ClientWidth), min(FBmp.Height, LCLForm.ClientHeight), FBmp.Canvas.Handle,0,0, SRCCOPY)
+        //BitBlt( LCLForm.Canvas.Handle, 0,0, min(FBmp.Width, LCLForm.ClientWidth), min(FBmp.Height, LCLForm.ClientHeight), FBmp.Canvas.Handle,0,0, SRCCOPY)
+        BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY)
   end;
 
 begin
   if csLoading in FMyForm.ComponentState then exit;
+
+  LCLForm.Canvas.Brush.Style:=bsSolid;
+  LCLForm.Canvas.Brush.Color:=clFuchsia;
+  LCLForm.Canvas.FillRect(LCLForm.ClientRect);
   PaintBuffer();
   inherited Paint;
 end;
@@ -424,7 +484,7 @@ begin
   with TtuiWindow(RootComponent) do
   begin
     DesktopBound := NewBounds;
-    DesktopClient := ClientRect;
+    //DesktopClient := ClientRect;
   end;
 end;
 
@@ -434,7 +494,7 @@ begin
   with TtuiWindow(RootComponent) do
   begin
     CurBounds := DesktopBound;
-    CurClientRect := DesktopClient;
+    //CurClientRect := DesktopClient;
   end;
 end;
 
