@@ -18,6 +18,7 @@ type
   private
     FMyForm: TtuiWindow;
     FUpdateCount : integer;
+    FScreenRendered: Boolean;
     FBmp : TBitmap;
     procedure InvalidateRect(ConsoleRect: TRect);
     procedure InvalidateBound(Sender: TObject);
@@ -37,6 +38,7 @@ type
     procedure GetClientArea(AComponent: TComponent; out
             CurClientArea: TRect; out ScrollOffset: TPoint); override;
 
+    procedure Paint0;
     procedure Paint; override;
     function ComponentIsIcon(AComponent: TComponent): boolean; override;
     function ParentAcceptsChild(Parent: TComponent;
@@ -100,9 +102,53 @@ type
     end;
     PBuf = ^TBuf;
 
-{ TTuirMediator }
+
+
+
 var
   FontWidth, FontHeight : Integer;
+
+function Chars2Pixel(A: TRect) : TRect;
+begin
+  with A do
+  result := Rect(
+         left* FontWidth, top * FontHeight,
+         right * FontWidth, bottom * FontHeight);
+end;
+
+function InDesktopOrigin(BView: TView): TPoint;
+var
+  Parent: TView;
+  ClientArea: TRect;
+  ScrollOffset: TPoint;
+  CurBounds: TRect;
+begin
+  Result:=Point(0,0);
+  while BView<>nil do begin
+    BView.GetBounds(CurBounds);
+    inc(Result.X,CurBounds.Left);
+    inc(Result.Y,CurBounds.Top);
+    //GetClientArea(Parent,ClientArea,ScrollOffset);
+    //inc(Result.X,ClientArea.Left+ScrollOffset.X);
+    //inc(Result.Y,ClientArea.Top+ScrollOffset.Y);
+    //BView:=Parent;
+    //Parent:=BView.GetParentComponent;
+    //if Parent=nil then break;
+    BView:=BView.Parent;
+  end;
+end;
+
+function InCharsBounds(AView: TView):TRect;
+var p : TPoint; //R: TRect;
+begin
+  AView.GetBounds(Result);
+  p := InDesktopOrigin(AView);
+  //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
+  //Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
+  Result.Offset(p);
+end;
+
+{ TTuirMediator }
 
 
 class function TTuirMediator.CreateMediator(TheOwner, aForm: TComponent
@@ -136,6 +182,7 @@ begin
         FontHeight := cy;
       end;
   end;
+  Mediator.FBmp.SetSize(Mediator.FMyForm.DesktopSize.X * FontWidth, Mediator.FMyForm.DesktopSize.Y * FontHeight);
 
   with Mediator.FMyForm do
   begin
@@ -172,7 +219,7 @@ begin
 end;
 
 procedure TTuirMediator.InvalidateBound(Sender: TObject);
-var R : TRect; P : TPOint;
+var R : TRect; P : TPoint;
   Container: TView;
 begin
   if IsUpdating then exit;
@@ -191,9 +238,10 @@ begin
     // lazarus draw selection artifact !
     }
     //R := LCLForm.ClientRect;
-    GetBounds(Self.FMyForm, R);
-    LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
-
+    //GetBounds(Self.FMyForm, R);
+    //LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
+    R := InCharsBounds(TView(Sender));
+    RenderChars(r.Left,r.Top, r.Right, r.Bottom);
   end;
 end;
 
@@ -265,21 +313,56 @@ begin
 end;
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
+var AView : TView;
+
   function InFormBounds():TRect;
-  var p : TPoint; R: TRect; AView : TView;
+  var p : TPoint; R: TRect;
   begin
-    AView := TView(AComponent);
     p := GetComponentOriginOnForm(AView);
     //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
     Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
   end;
 
+  {function InDesktopOrigin(BView: TView): TPoint;
+  var
+    Parent: TView;
+    ClientArea: TRect;
+    ScrollOffset: TPoint;
+    CurBounds: TRect;
+  begin
+    Result:=Point(0,0);
+    while BView<>nil do begin
+      BView.GetBounds(CurBounds);
+      inc(Result.X,CurBounds.Left);
+      inc(Result.Y,CurBounds.Top);
+      //GetClientArea(Parent,ClientArea,ScrollOffset);
+      //inc(Result.X,ClientArea.Left+ScrollOffset.X);
+      //inc(Result.Y,ClientArea.Top+ScrollOffset.Y);
+      //BView:=Parent;
+      //Parent:=BView.GetParentComponent;
+      //if Parent=nil then break;
+      BView:=BView.Parent;
+    end;
+  end;
+
+  function InCharsBounds():TRect;
+  var p : TPoint; //R: TRect;
+  begin
+    AView.GetBounds(Result);
+    p := InDesktopOrigin(AView);
+    //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
+    //Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
+    Result.Offset(p);
+  end; }
+
+
 var l,t,w,h : integer; R1, R2, R : TRect;
 begin //here the form created by ide.new() -> width=50,height=50
   if AComponent is TView then begin
-    BeginUpdate;
+    AView := TView(AComponent);
+//    BeginUpdate;
     //GetBounds(AComponent, R1);
-    R1 := InFormBounds();
+//    R1 := InCharsBounds();
     w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
     h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
 
@@ -289,15 +372,16 @@ begin //here the form created by ide.new() -> width=50,height=50
     h := h div FontHeight;
     TView(AComponent).SetBounds(l,t,  w, h);
     //GetBounds(AComponent, R2);
-    R2 := InFormBounds();
-    R := R1 + R2;
+//    R2 := InCharsBounds();
+//    R := R1 + R2;
     {With R1 do Writeln('R1:', Left, ', ', TOP, ', ', right, ', ',  bottom, ', ', width, ', ', Height);
     With R2 do Writeln('R2:', Left, ', ', TOP, ', ', right, ', ',  bottom, ', ', width, ', ', Height);
     With R do Writeln('R:',   Left, ', ', TOP, ', ', right, ', ',  bottom, ', ', width, ', ', Height);}
     {Writeln(R2);
     Writeln(R);}
-    LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
-    EndUpdate;
+//    RenderChars(r.Left,r.Top, r.Right, r.Bottom);
+    //LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
+//    EndUpdate;
   end
   else
     inherited SetBounds(AComponent,NewBounds);
@@ -341,7 +425,7 @@ begin
 end;
 
 
-procedure TTuirMediator.Paint;
+procedure TTuirMediator.Paint0;
 var TheCanvas : TCanvas;
   procedure PaintBuffer();
   // copy the VideoBuffer to LCLForm
@@ -498,15 +582,107 @@ var TheCanvas : TCanvas;
         BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY);
       RestoreHandleState;
     end;
+    FScreenRendered := true;
   end;
 
 begin
   if csLoading in FMyForm.ComponentState then exit;
 
-  LCLForm.Canvas.Brush.Style:=bsSolid;
+  {LCLForm.Canvas.Brush.Style:=bsSolid;
   LCLForm.Canvas.Brush.Color:=clFuchsia;
-  LCLForm.Canvas.FillRect(LCLForm.ClientRect);
-  PaintBuffer();
+  LCLForm.Canvas.FillRect(LCLForm.ClientRect);}
+
+  if not FScreenRendered then //PaintBuffer();
+  begin
+    RenderChars(0,0,  FMyForm.DesktopSize.X,  FMyForm.DesktopSize.y );
+    FScreenRendered := True;
+  end;
+  //else
+      //BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY);
+  LCLForm.Canvas.Draw(0,0, FBmp);
+  {with LCLForm.Canvas do
+    begin
+      //SaveHandleState;
+        //BitBlt( LCLForm.Canvas.Handle, 0,0, min(FBmp.Width, LCLForm.ClientWidth), min(FBmp.Height, LCLForm.ClientHeight), FBmp.Canvas.Handle,0,0, SRCCOPY)
+        BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY);
+      //RestoreHandleState;
+    end;}
+
+  inherited Paint;
+end;
+
+
+procedure TTuirMediator.Paint;
+
+  procedure PaintWidget(AView: TView);
+  var
+    i: Integer;
+    //Child: TMyWidget;
+    R : TRect;
+  begin
+    with LCLForm.Canvas do begin
+      // fill background
+      {Brush.Style:=bsSolid;
+      Brush.Color:=clLtGray;
+      FillRect(0,0,AWidget.Width,AWidget.Height);
+      // outer frame
+      Pen.Color:=clRed;
+      Rectangle(0,0,AWidget.Width,AWidget.Height);
+      // inner frame
+      if AWidget.AcceptChildrenAtDesignTime then begin
+        Pen.Color:=clMaroon;
+        Rectangle(AWidget.BorderLeft-1,AWidget.BorderTop-1,
+                  AWidget.Width-AWidget.BorderRight+1,
+                  AWidget.Height-AWidget.BorderBottom+1);
+      end;
+      // caption
+      TextOut(5,2,AWidget.Caption); }
+
+      //AWidget.GetBounds(R);
+      R:= InCharsBounds(AView); //console desktop
+      R:= Chars2Pixel(R);
+      BitBlt( LCLForm.Canvas.Handle, R.Left,r.Top, R.Width, R.Height, FBmp.Canvas.Handle,R.Left,r.Top, SRCCOPY);
+
+      {
+
+      // children
+      if AWidget.ChildCount>0 then begin
+        SaveHandleState;
+        // clip client area
+        MoveWindowOrgEx(Handle,AWidget.BorderLeft,AWidget.BorderTop);
+        if IntersectClipRect(Handle, 0, 0, AWidget.Width-AWidget.BorderLeft-AWidget.BorderRight,
+                             AWidget.Height-AWidget.BorderTop-AWidget.BorderBottom)<>NullRegion
+        then begin
+          for i:=0 to AWidget.ChildCount-1 do begin
+            SaveHandleState;
+            Child:=AWidget.Children[i];
+            // clip child area
+            MoveWindowOrgEx(Handle,Child.Left,Child.Top);
+            if IntersectClipRect(Handle,0,0,Child.Width,Child.Height)<>NullRegion then
+              PaintWidget(Child);
+            RestoreHandleState;
+          end;
+        end;
+        RestoreHandleState;
+      end;
+      }
+    end;
+  end;
+
+begin
+  if csLoading in FMyForm.ComponentState then exit;
+
+  {LCLForm.Canvas.Brush.Style:=bsSolid;
+  LCLForm.Canvas.Brush.Color:=clFuchsia;
+  LCLForm.Canvas.FillRect(LCLForm.ClientRect);}
+
+  if not FScreenRendered then //PaintBuffer();
+  begin
+    RenderChars(0,0,  FMyForm.DesktopSize.X,  FMyForm.DesktopSize.y );
+    FScreenRendered := True;
+  end;
+
+  PaintWidget(MyForm);
   inherited Paint;
 end;
 
@@ -527,9 +703,9 @@ procedure TTuirMediator.RenderChars(x1,y1, x2, y2: integer);
   end;
 var
   x,y,LastAtt: byte;
-      Buf : TBuf;
-    BufP : PBuf;
-    CurrentVideoBuf : PVideoBuf;
+  Buf : TBuf;  BufP : PBuf;
+  CurrentVideoBuf : PVideoBuf;
+  R: TRect;
 begin
     CurrentVideoBuf := FMyForm.Buffer;
     with FBmp.Canvas do
@@ -549,7 +725,7 @@ begin
       Brush.Style:=bsSolid;
       Brush.Color:= clLime;// clBlack;
       //Fillrect(LCLForm.ClientRect);
-      FillRect(Rect(0,0, FMyForm.DesktopSize.X * FontWidth, FMyForm.DesktopSize.Y * FontHeight));
+      //FillRect(Rect(0,0, FMyForm.DesktopSize.X * FontWidth, FMyForm.DesktopSize.Y * FontHeight));
       //exit;
 
       // first color
@@ -559,8 +735,8 @@ begin
       LastAtt := $FE;
 
       //we should offset the Window on BufferScreen into DesignerForm
-      x1 := FMyForm.Left;
-      y1 := FMyForm.Top;
+      //x1 := FMyForm.Left;
+      //y1 := FMyForm.Top;
 
       for y := y1 to y2 do
       begin
@@ -585,6 +761,11 @@ begin
         end;
       end;
     end;
+    R := Chars2Pixel(Rect(x1,y1,x2,y2));
+    BitBlt( LCLForm.Canvas.Handle, r.left,r.top, r.Width, r.Height, FBmp.Canvas.Handle, r.left,r.top, SRCCOPY);
+    LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
+
+
 end;
 
 function TTuirMediator.ComponentIsIcon(AComponent: TComponent): boolean;
@@ -601,8 +782,8 @@ end;
 procedure TTuirMediator.SetFormBounds(RootComponent: TComponent; NewBounds,
   ClientRect: TRect);
 begin
-  with ClientRect do
-  FBmp.SetSize(right-left+1, bottom-Top+1);
+  //with ClientRect do
+  //FBmp.SetSize(right-left+1, bottom-Top+1);
   with TtuiWindow(RootComponent) do
   begin
     DesktopBound := NewBounds;
