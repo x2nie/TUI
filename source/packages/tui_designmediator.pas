@@ -24,6 +24,7 @@ type
     procedure BeginUpdate;
     procedure EndUpdate;
     function IsUpdating: boolean;
+    procedure RenderChars(x1, y1, x2, y2: integer);
   public
 
     // needed by the Lazarus form editor
@@ -91,6 +92,13 @@ end;
 
 type
   TtuiWindowAccess = class(TtuiWindow);
+
+    type
+    TBuf = packed record
+      S : char;
+      Att : byte;
+    end;
+    PBuf = ^TBuf;
 
 { TTuirMediator }
 var
@@ -165,15 +173,26 @@ end;
 
 procedure TTuirMediator.InvalidateBound(Sender: TObject);
 var R : TRect; P : TPOint;
+  Container: TView;
 begin
   if IsUpdating then exit;
   if sender is TView then
   begin
-    P := self.GetComponentOriginOnForm(TView(Sender));
+    {P := self.GetComponentOriginOnForm(TView(Sender));
     GetBounds(TView(Sender), R);
     OffsetRect(R, -R.Left, -R.Top);
     OffsetRect(R, P.x, P.y);
-    LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
+    //LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
+    R := LCLForm.ClientRect;
+    Container := TView(Sender);
+    if Assigned(Container.Parent) then
+       Container := Container.Parent;
+    GetBounds(TComponent(Container), R);
+    // lazarus draw selection artifact !
+    }
+    //R := LCLForm.ClientRect;
+    GetBounds(Self.FMyForm, R);
+    LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
 
   end;
 end;
@@ -246,10 +265,21 @@ begin
 end;
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
-var l,t,w,h : integer;
+  function InFormBounds():TRect;
+  var p : TPoint; R: TRect; AView : TView;
+  begin
+    AView := TView(AComponent);
+    p := GetComponentOriginOnForm(AView);
+    //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
+    Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
+  end;
+
+var l,t,w,h : integer; R1, R2, R : TRect;
 begin //here the form created by ide.new() -> width=50,height=50
-  BeginUpdate;
   if AComponent is TView then begin
+    BeginUpdate;
+    //GetBounds(AComponent, R1);
+    R1 := InFormBounds();
     w := (NewBounds.Right-NewBounds.Left +1);// div FontWidth;
     h := (NewBounds.Bottom-NewBounds.Top +1);// div FontHeight;
 
@@ -258,11 +288,20 @@ begin //here the form created by ide.new() -> width=50,height=50
     w := w div FontWidth;
     h := h div FontHeight;
     TView(AComponent).SetBounds(l,t,  w, h);
+    //GetBounds(AComponent, R2);
+    R2 := InFormBounds();
+    R := R1 + R2;
+    {With R1 do Writeln('R1:', Left, ', ', TOP, ', ', right, ', ',  bottom, ', ', width, ', ', Height);
+    With R2 do Writeln('R2:', Left, ', ', TOP, ', ', right, ', ',  bottom, ', ', width, ', ', Height);
+    With R do Writeln('R:',   Left, ', ', TOP, ', ', right, ', ',  bottom, ', ', width, ', ', Height);}
+    {Writeln(R2);
+    Writeln(R);}
+    LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
+    EndUpdate;
   end
   else
     inherited SetBounds(AComponent,NewBounds);
 
-  EndUpdate;
 end;
 
 {procedure TTuirMediator.InvalidateRect(Sender: TObject; ARect: TRect;
@@ -294,7 +333,8 @@ begin
   if AComponent = FMyForm then begin
     //Widget:=TMyWidget(AComponent);
     with FMyForm do
-        CurClientArea := Rect(Left* FontWidth, Top* FontHeight, Width* FontWidth, Height* FontHeight);
+        //CurClientArea := Rect(Left* FontWidth, Top* FontHeight, Width* FontWidth, Height* FontHeight);
+    CurClientArea := Bounds(Left* FontWidth, Top* FontHeight, Width* FontWidth, Height* FontHeight);
     ScrollOffset:=Point(0,0);
   end else
     inherited GetClientArea(AComponent, CurClientArea, ScrollOffset);
@@ -441,7 +481,7 @@ var TheCanvas : TCanvas;
         end;
       end;
 
-
+      Brush.Color := clBlack;
       Line(
            FMyForm.DesktopSize.X * FontWidth, 0,
            FMyForm.DesktopSize.x * FontWidth, LCLForm.Height);
@@ -451,8 +491,13 @@ var TheCanvas : TCanvas;
     end; //with canvas
 
     if TheCanvas <> LCLForm.Canvas then
+    with LCLForm.Canvas do
+    begin
+      SaveHandleState;
         //BitBlt( LCLForm.Canvas.Handle, 0,0, min(FBmp.Width, LCLForm.ClientWidth), min(FBmp.Height, LCLForm.ClientHeight), FBmp.Canvas.Handle,0,0, SRCCOPY)
-        BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY)
+        BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY);
+      RestoreHandleState;
+    end;
   end;
 
 begin
@@ -463,6 +508,83 @@ begin
   LCLForm.Canvas.FillRect(LCLForm.ClientRect);
   PaintBuffer();
   inherited Paint;
+end;
+
+procedure TTuirMediator.RenderChars(x1,y1, x2, y2: integer);
+  procedure ApplyColor(Att:Byte);
+  var c : Byte;
+  begin
+    with FBmp.Canvas do begin
+      //background
+      c := (Att and $F0) shr 4;
+      Brush.Color := LCLColors[c];
+
+      //text
+      c := Att and $F;
+      Font.Color := LCLColors[c];
+
+    end;
+  end;
+var
+  x,y,LastAtt: byte;
+      Buf : TBuf;
+    BufP : PBuf;
+    CurrentVideoBuf : PVideoBuf;
+begin
+    CurrentVideoBuf := FMyForm.Buffer;
+    with FBmp.Canvas do
+    begin
+      Font.Size := TERMINAL_FONT_SIZE;
+      Font.Name:= TERMINAL_FONT_NAME;
+
+      Brush.Style:=bsSolid;
+      {with TextExtent('H') do begin
+        FontWidth := cx;
+        FontHeight := cy;
+        CharW := cx;
+        CharH := cy;
+      end;}
+
+      // fill background
+      Brush.Style:=bsSolid;
+      Brush.Color:= clLime;// clBlack;
+      //Fillrect(LCLForm.ClientRect);
+      FillRect(Rect(0,0, FMyForm.DesktopSize.X * FontWidth, FMyForm.DesktopSize.Y * FontHeight));
+      //exit;
+
+      // first color
+      {Buf := PBuf(VideoBuf)^;
+      ApplyColor(Buf.Att);
+      LastAtt := Buf.Att;}
+      LastAtt := $FE;
+
+      //we should offset the Window on BufferScreen into DesignerForm
+      x1 := FMyForm.Left;
+      y1 := FMyForm.Top;
+
+      for y := y1 to y2 do
+      begin
+        for x := x1 to x2 do
+        begin
+          BufP := PBuf(Pointer(CurrentVideoBuf) + (
+            (
+              (y * FMyForm.DesktopSize.x)
+              + x
+            ) * SizeOf(TBuf) ));
+          if(ord(BUfP^.S)) < 32 then
+            continue;
+
+          if BufP^.Att <> LastAtt then
+          begin
+            ApplyColor(BufP^.Att);
+            LastAtt := BufP^.Att;
+          end;
+          //if BufP^.S > #30 then
+          //TextOut(x1 + x * FontWidth, y1 + y * FontHeight, BufP^.S);
+          TextOut( x * FontWidth,  y * FontHeight, BufP^.S);
+        end;
+      end;
+    end;
 end;
 
 function TTuirMediator.ComponentIsIcon(AComponent: TComponent): boolean;
