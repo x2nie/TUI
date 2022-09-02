@@ -26,6 +26,9 @@ type
     procedure EndUpdate;
     function IsUpdating: boolean;
     procedure RenderChars(x1, y1, x2, y2: integer);
+  protected
+    //procedure SetLCLForm(const AValue: TForm); override;
+    procedure DoFullRedraw(Sender: TObject);
   public
 
     // needed by the Lazarus form editor
@@ -37,6 +40,7 @@ type
     procedure SetBounds(AComponent: TComponent; NewBounds: TRect); override;
     procedure GetClientArea(AComponent: TComponent; out
             CurClientArea: TRect; out ScrollOffset: TPoint); override;
+    function GetComponentOriginOnForm(AComponent: TComponent): TPoint; override;
 
     procedure Paint0;
     procedure Paint; override;
@@ -142,6 +146,7 @@ function InCharsBounds(AView: TView):TRect;
 var p : TPoint; //R: TRect;
 begin
   AView.GetBounds(Result);
+  if not AView.HasParent then exit;
   p := InDesktopOrigin(AView);
   //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
   //Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
@@ -309,7 +314,10 @@ procedure TTuirMediator.SetLCLForm(const AValue: TForm);
 begin
   inherited SetLCLForm(AValue);
   if AValue <> nil then
+  begin
     AValue.BoundsRect := FMyForm.DesktopBound;
+    AValue.OnDblClick:= @DoFullRedraw;
+  end;
 end;
 
 procedure TTuirMediator.SetBounds(AComponent: TComponent; NewBounds: TRect);
@@ -322,39 +330,6 @@ var AView : TView;
     //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
     Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
   end;
-
-  {function InDesktopOrigin(BView: TView): TPoint;
-  var
-    Parent: TView;
-    ClientArea: TRect;
-    ScrollOffset: TPoint;
-    CurBounds: TRect;
-  begin
-    Result:=Point(0,0);
-    while BView<>nil do begin
-      BView.GetBounds(CurBounds);
-      inc(Result.X,CurBounds.Left);
-      inc(Result.Y,CurBounds.Top);
-      //GetClientArea(Parent,ClientArea,ScrollOffset);
-      //inc(Result.X,ClientArea.Left+ScrollOffset.X);
-      //inc(Result.Y,ClientArea.Top+ScrollOffset.Y);
-      //BView:=Parent;
-      //Parent:=BView.GetParentComponent;
-      //if Parent=nil then break;
-      BView:=BView.Parent;
-    end;
-  end;
-
-  function InCharsBounds():TRect;
-  var p : TPoint; //R: TRect;
-  begin
-    AView.GetBounds(Result);
-    p := InDesktopOrigin(AView);
-    //p.Offset(MyForm.Left* FontWidth, MyForm.Top * FontHeight);
-    //Result := Bounds(p.x, p.y, AView.Width * FOntWidth, AView.Height * FontHeight);
-    Result.Offset(p);
-  end; }
-
 
 var l,t,w,h : integer; R1, R2, R : TRect;
 begin //here the form created by ide.new() -> width=50,height=50
@@ -422,6 +397,19 @@ begin
     ScrollOffset:=Point(0,0);
   end else
     inherited GetClientArea(AComponent, CurClientArea, ScrollOffset);
+end;
+
+function TTuirMediator.GetComponentOriginOnForm(AComponent: TComponent): TPoint;
+var R : TRect;
+begin
+  if AComponent is TView then
+  begin
+    R := Chars2Pixel(InCharsBounds(TView(AComponent)));
+    Result := R.TopLeft;
+    exit;
+  end;
+
+  Result:=inherited GetComponentOriginOnForm(AComponent);
 end;
 
 
@@ -641,7 +629,9 @@ procedure TTuirMediator.Paint;
       //AWidget.GetBounds(R);
       R:= InCharsBounds(AView); //console desktop
       R:= Chars2Pixel(R);
-      BitBlt( LCLForm.Canvas.Handle, R.Left,r.Top, R.Width, R.Height, FBmp.Canvas.Handle,R.Left,r.Top, SRCCOPY);
+      //BitBlt( LCLForm.Canvas.Handle, R.Left,r.Top, R.Width, R.Height, FBmp.Canvas.Handle,R.Left,r.Top, SRCCOPY);
+      draw(0,0,FBmp);
+      FrameRect(R);
 
       {
 
@@ -705,7 +695,7 @@ var
   x,y,LastAtt: byte;
   Buf : TBuf;  BufP : PBuf;
   CurrentVideoBuf : PVideoBuf;
-  R: TRect;
+  R1,R2,R: TRect;
 begin
     CurrentVideoBuf := FMyForm.Buffer;
     with FBmp.Canvas do
@@ -761,11 +751,21 @@ begin
         end;
       end;
     end;
-    R := Chars2Pixel(Rect(x1,y1,x2,y2));
-    BitBlt( LCLForm.Canvas.Handle, r.left,r.top, r.Width, r.Height, FBmp.Canvas.Handle, r.left,r.top, SRCCOPY);
-    LCLIntf.InvalidateRect(LCLForm.Handle,@R,False);
+    //exit;
+    R1 := Chars2Pixel(Rect(x1,y1,x2,y2));
+    R2 := InCharsBounds(MyForm);
+    R2 := Chars2Pixel(R2);
+    R := R1 * R2; //intersect
+    //BitBlt( LCLForm.Canvas.Handle, r.left,r.top, r.Width, r.Height, FBmp.Canvas.Handle, r.left,r.top, SRCCOPY);
+    LCLIntf.InvalidateRect(LCLForm.Handle,@R,True);
 
 
+end;
+
+procedure TTuirMediator.DoFullRedraw(Sender: TObject);
+begin
+  Writeln('dbl-click');
+  BitBlt( LCLForm.Canvas.Handle, 0,0, FBmp.Width, FBmp.Height, FBmp.Canvas.Handle,0,0, SRCCOPY);
 end;
 
 function TTuirMediator.ComponentIsIcon(AComponent: TComponent): boolean;
@@ -861,6 +861,7 @@ initialization
   ScreenHeight:= 40;
 
   AssignVideoBuf(0,0);
+  LockScreenUpdate(); //prevent direct print to console, which is annoying for lazarus debuglog.
 
 finalization
   FreeVideoBuf;
