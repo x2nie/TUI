@@ -15,6 +15,8 @@ type
 
   TtuiWindow1 = class(TtuiWindow)
     Group1: TGroup;
+    Label1: TLabel;
+    tuiFrame1: TtuiFrame;
     tuiLabel1: TtuiLabel;
     tuiLabel2: TtuiLabel;
     tuiLabel3: TtuiLabel;

@@ -37,6 +37,10 @@ type
 
   end;
 
+  TLabel = class(TtuiLabel)
+
+  end;
+
 implementation
 
 { TtuiLabel }

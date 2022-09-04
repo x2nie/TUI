@@ -8,13 +8,17 @@ uses
 procedure Register;
 
 implementation
-uses PropEdits,tui_prop_color, tui, TUI_widgets;
+uses ComponentEditors, PropEdits,tui_prop_color, tui, TUI_widgets;
 
 procedure Register;
 begin
-  RegisterComponents('Standard',[TGroup, TtuiLabel, TtuiFrame]);
+  RegisterComponents('Standard',[TGroup, TtuiLabel, TLabel, TtuiFrame]);
 
   RegisterPropertyEditor(TypeInfo(word), TView, 'Color', TTuiColorEditor);
+
+  {$IFDEF COMPONENT_FACTORY}
+  RegisterComponentFactory('TUI', [TView]);
+  {$ENDIF}
 
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Caption', TStringMultilinePropertyEditor);
   //RegisterPropertyEditor(TypeInfo(widestring), TlqWidget, 'Text', TStringMultilinePropertyEditor);

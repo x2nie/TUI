@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CONFIG>
-  <Package Version="4">
+  <Package Version="5">
     <PathDelim Value="\"/>
     <Name Value="tui_runtime"/>
     <Author Value="x2nie - Fathony Luthfilah"/>
@@ -23,7 +23,7 @@
       </CodeGeneration>
       <Linking>
         <Debugging>
-          <DebugInfoType Value="dsDwarf2"/>
+          <DebugInfoType Value="dsDwarf3"/>
           <UseHeaptrc Value="True"/>
           <TrashVariables Value="True"/>
           <UseValgrind Value="True"/>
@@ -36,13 +36,14 @@
     <Files Count="2">
       <Item1>
         <Filename Value="..\tui.pas"/>
-        <UnitName Value="tui"/>
+        <UnitName Value="TUI"/>
       </Item1>
       <Item2>
         <Filename Value="..\tui_widgets.pas"/>
-        <UnitName Value="tui_widgets"/>
+        <UnitName Value="TUI_widgets"/>
       </Item2>
     </Files>
+    <CompatibilityMode Value="True"/>
     <RequiredPkgs Count="1">
       <Item1>
         <PackageName Value="FCL"/>

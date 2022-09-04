@@ -1,51 +1,51 @@
 object tuiWindow1: TtuiWindow1
   Color = 28266
-  Left = 6
-  Top = 1
+  Left = 2
+  Top = 2
   Width = 78
   Height = 25
   DesktopBounds = {
-    020200009D000000EE040000030300005000000028000000
+    4D0600007B000000470900005E0200005000000028000000
   }
   object tuiLabel1: TtuiLabel
     Color = 40095
-    Left = 2
-    Top = 1
+    Left = 11
+    Top = 4
     Width = 20
     Text = '~tui~Label1'
   end
   object tuiLabel2: TtuiLabel
     Color = 23647
-    Left = 2
-    Top = 18
+    Left = 27
+    Top = 10
     Width = 13
     Text = 'tuiLabel2'
   end
   object tuiLabel3: TtuiLabel
     Color = 31871
-    Left = 9
+    Left = 8
     Top = 4
     Width = 13
     Text = 'tui~L~abel3'
   end
   object Group1: TGroup
     Color = 23647
-    Left = 29
-    Top = 4
-    Width = 28
+    Left = 5
+    Top = 11
+    Width = 29
     Height = 7
     object tuiLabel4: TtuiLabel
       Color = 11311
-      Left = 0
-      Top = 5
+      Left = 12
+      Top = 4
       Width = 20
       Text = 'tuiLabel4'
     end
   end
   object tuiLabel5: TtuiLabel
     Color = 11311
-    Left = 28
-    Top = 28
+    Left = 25
+    Top = 19
     Width = 20
     Height = 2
     Text = 'tuiLabel4'
@@ -84,9 +84,16 @@ object tuiWindow1: TtuiWindow1
   end
   object tuiFrame1: TtuiFrame
     Color = 31871
-    Left = 36
-    Top = 3
+    Left = 46
+    Top = 4
     Width = 10
     Height = 1
+  end
+  object Label1: TLabel
+    Color = 35983
+    Left = 39
+    Top = 8
+    Width = 20
+    Text = 'Label1'
   end
 end
